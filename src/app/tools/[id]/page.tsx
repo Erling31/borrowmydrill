@@ -13,7 +13,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
   return (
     <div className="max-w-2xl mx-auto px-4 py-10">
       <Link href="/tools" className="text-sm text-zinc-500 hover:text-zinc-700 mb-6 inline-block">
-        ← Back to tools
+        ← Tilbake til verktøy
       </Link>
 
       <div className="bg-white rounded-2xl border border-zinc-200 p-8">
@@ -26,7 +26,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
               tool.available ? "bg-green-100 text-green-700" : "bg-zinc-100 text-zinc-500"
             }`}
           >
-            {tool.available ? "Available" : "Currently Borrowed"}
+            {tool.available ? "Ledig" : "Utlånt"}
           </span>
         </div>
 
@@ -39,7 +39,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
             href={`/tools/${tool.id}/request`}
             className="mt-8 block w-full bg-orange-600 text-white text-center py-3 rounded-full font-medium hover:bg-orange-700 transition-colors"
           >
-            Request to Borrow
+            Send låneforespørsel
           </Link>
         )}
       </div>

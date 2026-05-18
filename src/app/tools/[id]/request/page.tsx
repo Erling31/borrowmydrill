@@ -32,7 +32,7 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
 
     if (!res.ok) {
       const data = await res.json();
-      setError(data.error ?? "Something went wrong.");
+      setError(data.error ?? "Noe gikk galt. Prøv igjen.");
       setSubmitting(false);
       return;
     }
@@ -43,14 +43,14 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
   return (
     <div className="max-w-lg mx-auto px-4 py-10">
       <Link href={`/tools/${id}`} className="text-sm text-zinc-500 hover:text-zinc-700 mb-6 inline-block">
-        ← Back to tool
+        ← Tilbake til verktøy
       </Link>
       <div className="bg-white rounded-2xl border border-zinc-200 p-8">
-        <h1 className="text-xl font-bold mb-6">Request to Borrow</h1>
+        <h1 className="text-xl font-bold mb-6">Send låneforespørsel</h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-3">
             <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-              From
+              Fra
               <input
                 required
                 type="date"
@@ -60,7 +60,7 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
               />
             </label>
             <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-              To
+              Til
               <input
                 required
                 type="date"
@@ -71,13 +71,13 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
             </label>
           </div>
           <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-            What are you working on? (optional)
+            Hva skal du bruke det til? (valgfritt)
             <textarea
               value={form.message}
               onChange={(e) => setForm({ ...form, message: e.target.value })}
               rows={3}
               className="border border-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"
-              placeholder="Building a deck, hanging shelves..."
+              placeholder="Bygge terrasse, henge opp hyller..."
             />
           </label>
 
@@ -88,7 +88,7 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
             disabled={submitting}
             className="mt-2 bg-orange-600 text-white py-3 rounded-full font-medium hover:bg-orange-700 transition-colors disabled:opacity-60"
           >
-            {submitting ? "Sending…" : "Send Request"}
+            {submitting ? "Sender…" : "Send forespørsel"}
           </button>
         </form>
       </div>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 
-export const metadata = { title: "Browse Tools – BorrowMyDrill" };
+export const metadata = { title: "Se verktøy – BorrowMyDrill" };
 
 export default async function ToolsPage() {
   const tools = await db.tool.findMany({
@@ -12,19 +12,19 @@ export default async function ToolsPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold">Available Tools</h1>
+        <h1 className="text-2xl font-bold">Tilgjengelig verktøy</h1>
         <Link
           href="/tools/new"
           className="bg-orange-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-orange-700 transition-colors"
         >
-          List a Tool
+          Legg ut verktøy
         </Link>
       </div>
 
       {tools.length === 0 && (
         <p className="text-zinc-500 text-center py-20">
-          No tools listed yet.{" "}
-          <Link href="/tools/new" className="text-orange-600 hover:underline">Be the first!</Link>
+          Ingen verktøy er lagt ut ennå.{" "}
+          <Link href="/tools/new" className="text-orange-600 hover:underline">Vær den første!</Link>
         </p>
       )}
 
@@ -46,7 +46,7 @@ export default async function ToolsPage() {
                     : "bg-zinc-100 text-zinc-500"
                 }`}
               >
-                {tool.available ? "Available" : "Borrowed"}
+                {tool.available ? "Ledig" : "Utlånt"}
               </span>
             </div>
             <h3 className="font-semibold text-zinc-900">{tool.name}</h3>
