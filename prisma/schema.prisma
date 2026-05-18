@@ -1,0 +1,31 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Tool {
+  id           String        @id @default(cuid())
+  name         String
+  description  String
+  ownerName    String
+  neighborhood String
+  available    Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  requests     BorrowRequest[]
+}
+
+model BorrowRequest {
+  id        String   @id @default(cuid())
+  toolId    String
+  tool      Tool     @relation(fields: [toolId], references: [id])
+  name      String
+  message   String?
+  startDate DateTime
+  endDate   DateTime
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+}
