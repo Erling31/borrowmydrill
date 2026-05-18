@@ -2,23 +2,41 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { use } from "react";
 
 export default function RequestPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
-  const [form, setForm] = useState({ name: "", message: "", startDate: "", endDate: "" });
+  const { status } = useSession();
+  const [form, setForm] = useState({ message: "", startDate: "", endDate: "" });
+  const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  if (status === "unauthenticated") {
+    router.replace(`/auth/signin?callbackUrl=/tools/${id}/request`);
+    return null;
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
-    await fetch("/api/requests", {
+    setError("");
+
+    const res = await fetch("/api/requests", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ toolId: id, ...form }),
     });
+
+    if (!res.ok) {
+      const data = await res.json();
+      setError(data.error ?? "Something went wrong.");
+      setSubmitting(false);
+      return;
+    }
+
     router.push(`/tools/${id}?requested=1`);
   }
 
@@ -30,16 +48,6 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
       <div className="bg-white rounded-2xl border border-zinc-200 p-8">
         <h1 className="text-xl font-bold mb-6">Request to Borrow</h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-            Your name
-            <input
-              required
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="border border-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-              placeholder="e.g. Alex Johnson"
-            />
-          </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
               From
@@ -72,6 +80,9 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
               placeholder="Building a deck, hanging shelves..."
             />
           </label>
+
+          {error && <p className="text-sm text-red-600">{error}</p>}
+
           <button
             type="submit"
             disabled={submitting}

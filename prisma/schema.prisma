@@ -7,14 +7,25 @@ datasource db {
   provider = "sqlite"
 }
 
-model Tool {
+model User {
   id           String        @id @default(cuid())
+  email        String        @unique
+  passwordHash String
+  name         String
+  neighborhood String
+  createdAt    DateTime      @default(now())
+  tools        Tool[]
+  requests     BorrowRequest[]
+}
+
+model Tool {
+  id           String          @id @default(cuid())
   name         String
   description  String
-  ownerName    String
-  neighborhood String
-  available    Boolean       @default(true)
-  createdAt    DateTime      @default(now())
+  available    Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  ownerId      String
+  owner        User            @relation(fields: [ownerId], references: [id])
   requests     BorrowRequest[]
 }
 
@@ -22,7 +33,8 @@ model BorrowRequest {
   id        String   @id @default(cuid())
   toolId    String
   tool      Tool     @relation(fields: [toolId], references: [id])
-  name      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
   message   String?
   startDate DateTime
   endDate   DateTime

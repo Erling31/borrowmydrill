@@ -1,16 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-
-const MOCK_TOOLS = [
-  { id: "1", name: "DeWalt Cordless Drill", owner: "Maria S.", neighborhood: "Oak Street", available: true, description: "18V cordless drill with two batteries and a charger. Good for general household tasks." },
-  { id: "2", name: "Circular Saw", owner: "James K.", neighborhood: "Elm Ave", available: true, description: "7.25\" circular saw, perfect for cutting lumber and sheet goods." },
-  { id: "3", name: "Random Orbital Sander", owner: "Priya N.", neighborhood: "Oak Street", available: false, description: "5\" random orbital sander. Comes with assorted sandpaper pads." },
-  { id: "4", name: "Jigsaw", owner: "Tom B.", neighborhood: "Cedar Rd", available: true, description: "Variable speed jigsaw for curved and straight cuts in wood and metal." },
-];
+import { db } from "@/lib/db";
 
 export default async function ToolDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const tool = MOCK_TOOLS.find((t) => t.id === id);
+  const tool = await db.tool.findUnique({
+    where: { id },
+    include: { owner: { select: { name: true, neighborhood: true } } },
+  });
   if (!tool) notFound();
 
   return (
@@ -34,7 +31,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
         </div>
 
         <h1 className="text-2xl font-bold text-zinc-900">{tool.name}</h1>
-        <p className="text-zinc-500 mt-1">{tool.owner} · {tool.neighborhood}</p>
+        <p className="text-zinc-500 mt-1">{tool.owner.name} · {tool.owner.neighborhood}</p>
         <p className="mt-4 text-zinc-700 leading-relaxed">{tool.description}</p>
 
         {tool.available && (

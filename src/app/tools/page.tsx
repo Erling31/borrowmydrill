@@ -1,16 +1,14 @@
 import Link from "next/link";
+import { db } from "@/lib/db";
 
 export const metadata = { title: "Browse Tools – BorrowMyDrill" };
 
-// Placeholder data until we wire up a database
-const MOCK_TOOLS = [
-  { id: "1", name: "DeWalt Cordless Drill", owner: "Maria S.", neighborhood: "Oak Street", available: true },
-  { id: "2", name: "Circular Saw", owner: "James K.", neighborhood: "Elm Ave", available: true },
-  { id: "3", name: "Random Orbital Sander", owner: "Priya N.", neighborhood: "Oak Street", available: false },
-  { id: "4", name: "Jigsaw", owner: "Tom B.", neighborhood: "Cedar Rd", available: true },
-];
+export default async function ToolsPage() {
+  const tools = await db.tool.findMany({
+    include: { owner: { select: { name: true, neighborhood: true } } },
+    orderBy: { createdAt: "desc" },
+  });
 
-export default function ToolsPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
       <div className="flex items-center justify-between mb-8">
@@ -23,8 +21,15 @@ export default function ToolsPage() {
         </Link>
       </div>
 
+      {tools.length === 0 && (
+        <p className="text-zinc-500 text-center py-20">
+          No tools listed yet.{" "}
+          <Link href="/tools/new" className="text-orange-600 hover:underline">Be the first!</Link>
+        </p>
+      )}
+
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {MOCK_TOOLS.map((tool) => (
+        {tools.map((tool) => (
           <Link
             key={tool.id}
             href={`/tools/${tool.id}`}
@@ -45,7 +50,7 @@ export default function ToolsPage() {
               </span>
             </div>
             <h3 className="font-semibold text-zinc-900">{tool.name}</h3>
-            <p className="text-sm text-zinc-500 mt-1">{tool.owner} · {tool.neighborhood}</p>
+            <p className="text-sm text-zinc-500 mt-1">{tool.owner.name} · {tool.owner.neighborhood}</p>
           </Link>
         ))}
       </div>

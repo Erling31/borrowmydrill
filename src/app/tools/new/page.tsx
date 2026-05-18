@@ -2,21 +2,39 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 
 export default function NewToolPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ name: "", description: "", neighborhood: "", ownerName: "" });
+  const { status } = useSession();
+  const [form, setForm] = useState({ name: "", description: "" });
+  const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  if (status === "unauthenticated") {
+    router.replace("/auth/signin?callbackUrl=/tools/new");
+    return null;
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
-    await fetch("/api/tools", {
+    setError("");
+
+    const res = await fetch("/api/tools", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
+
+    if (!res.ok) {
+      const data = await res.json();
+      setError(data.error ?? "Something went wrong.");
+      setSubmitting(false);
+      return;
+    }
+
     router.push("/tools?listed=1");
   }
 
@@ -49,26 +67,9 @@ export default function NewToolPage() {
               placeholder="Brand, condition, what it's good for..."
             />
           </label>
-          <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-            Your name
-            <input
-              required
-              value={form.ownerName}
-              onChange={(e) => setForm({ ...form, ownerName: e.target.value })}
-              className="border border-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-              placeholder="e.g. Maria S."
-            />
-          </label>
-          <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-            Neighborhood / street
-            <input
-              required
-              value={form.neighborhood}
-              onChange={(e) => setForm({ ...form, neighborhood: e.target.value })}
-              className="border border-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-              placeholder="e.g. Oak Street"
-            />
-          </label>
+
+          {error && <p className="text-sm text-red-600">{error}</p>}
+
           <button
             type="submit"
             disabled={submitting}
