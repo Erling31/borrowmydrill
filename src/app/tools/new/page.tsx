@@ -39,12 +39,12 @@ export default function NewToolPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-10">
-      <Link href="/tools" className="text-sm text-zinc-500 hover:text-zinc-700 mb-6 inline-block">
+    <div className="max-w-lg mx-auto px-4 py-8">
+      <Link href="/tools" className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-700 mb-5 py-1">
         ← Tilbake til verktøy
       </Link>
-      <div className="bg-white rounded-2xl border border-zinc-200 p-8">
-        <h1 className="text-xl font-bold mb-6">Legg ut et verktøy</h1>
+      <div className="bg-white rounded-2xl border border-zinc-200 p-5 sm:p-8">
+        <h1 className="text-xl font-bold mb-5">Legg ut et verktøy</h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
             Navn på verktøy
@@ -52,7 +52,7 @@ export default function NewToolPage() {
               required
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="border border-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="border border-zinc-300 rounded-lg px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-orange-400"
               placeholder="f.eks. DeWalt drill"
             />
           </label>
@@ -62,8 +62,8 @@ export default function NewToolPage() {
               required
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              rows={3}
-              className="border border-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"
+              rows={4}
+              className="border border-zinc-300 rounded-lg px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"
               placeholder="Merke, tilstand, hva det passer til..."
             />
           </label>
@@ -73,7 +73,7 @@ export default function NewToolPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="mt-2 bg-orange-600 text-white py-3 rounded-full font-medium hover:bg-orange-700 transition-colors disabled:opacity-60"
+            className="mt-1 bg-orange-600 text-white py-4 rounded-full font-medium hover:bg-orange-700 active:bg-orange-800 transition-colors disabled:opacity-60 text-base"
           >
             {submitting ? "Legger ut…" : "Legg ut verktøy"}
           </button>

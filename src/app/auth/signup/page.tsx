@@ -40,8 +40,8 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center px-4">
-      <div className="w-full max-w-sm bg-white rounded-2xl border border-zinc-200 p-8">
+    <div className="flex items-start sm:items-center justify-center min-h-[calc(100dvh-3.5rem)] px-4 py-8">
+      <div className="w-full max-w-sm bg-white rounded-2xl border border-zinc-200 p-6 sm:p-8">
         <h1 className="text-xl font-bold mb-1">Opprett konto</h1>
         <p className="text-sm text-zinc-500 mb-6">Bli med på BorrowMyDrill og start å dele verktøy</p>
 
@@ -50,9 +50,10 @@ export default function SignUpPage() {
             Navn
             <input
               required
+              autoComplete="name"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="border border-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="border border-zinc-300 rounded-lg px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-orange-400"
               placeholder="f.eks. Maria S."
             />
           </label>
@@ -61,9 +62,10 @@ export default function SignUpPage() {
             <input
               type="email"
               required
+              autoComplete="email"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="border border-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="border border-zinc-300 rounded-lg px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-orange-400"
               placeholder="deg@eksempel.no"
             />
           </label>
@@ -73,9 +75,10 @@ export default function SignUpPage() {
               type="password"
               required
               minLength={8}
+              autoComplete="new-password"
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
-              className="border border-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="border border-zinc-300 rounded-lg px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-orange-400"
               placeholder="Minst 8 tegn"
             />
           </label>
@@ -83,9 +86,10 @@ export default function SignUpPage() {
             Nabolag / gate
             <input
               required
+              autoComplete="address-level2"
               value={form.neighborhood}
               onChange={(e) => setForm({ ...form, neighborhood: e.target.value })}
-              className="border border-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="border border-zinc-300 rounded-lg px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-orange-400"
               placeholder="f.eks. Ekebergveien"
             />
           </label>
@@ -95,7 +99,7 @@ export default function SignUpPage() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-2 bg-orange-600 text-white py-2.5 rounded-full font-medium hover:bg-orange-700 transition-colors disabled:opacity-60"
+            className="mt-1 bg-orange-600 text-white py-4 rounded-full font-medium hover:bg-orange-700 active:bg-orange-800 transition-colors disabled:opacity-60 text-base"
           >
             {loading ? "Oppretter konto…" : "Opprett konto"}
           </button>

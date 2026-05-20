@@ -4,24 +4,24 @@ export default function Home() {
   return (
     <div>
       {/* Hero */}
-      <section className="bg-white border-b border-zinc-200 py-20 px-4 text-center">
-        <h1 className="text-4xl font-bold tracking-tight text-zinc-900 sm:text-5xl">
+      <section className="bg-white border-b border-zinc-200 py-16 px-4 text-center">
+        <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-zinc-900">
           Trenger du en drill? <span className="text-orange-600">Spør naboen.</span>
         </h1>
-        <p className="mt-4 max-w-xl mx-auto text-lg text-zinc-500">
+        <p className="mt-4 max-w-xl mx-auto text-base sm:text-lg text-zinc-500">
           BorrowMyDrill gjør det enkelt å dele og låne elektroverktøy med folk i nabolaget ditt.
           Ingen tur til butikken, og du slipper å kjøpe verktøy du bare bruker én gang.
         </p>
-        <div className="mt-8 flex gap-4 justify-center">
+        <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center items-center">
           <Link
             href="/tools"
-            className="bg-orange-600 text-white px-6 py-3 rounded-full font-medium hover:bg-orange-700 transition-colors"
+            className="w-full sm:w-auto bg-orange-600 text-white px-6 py-3.5 rounded-full font-medium hover:bg-orange-700 transition-colors text-center"
           >
             Se verktøy
           </Link>
           <Link
             href="/tools/new"
-            className="border border-zinc-300 text-zinc-700 px-6 py-3 rounded-full font-medium hover:bg-zinc-100 transition-colors"
+            className="w-full sm:w-auto border border-zinc-300 text-zinc-700 px-6 py-3.5 rounded-full font-medium hover:bg-zinc-100 transition-colors text-center"
           >
             Legg ut ditt verktøy
           </Link>
@@ -29,9 +29,9 @@ export default function Home() {
       </section>
 
       {/* Slik fungerer det */}
-      <section className="max-w-5xl mx-auto px-4 py-16">
-        <h2 className="text-2xl font-bold text-center mb-10">Slik fungerer det</h2>
-        <div className="grid sm:grid-cols-3 gap-8 text-center">
+      <section className="max-w-5xl mx-auto px-4 py-12 sm:py-16">
+        <h2 className="text-xl sm:text-2xl font-bold text-center mb-8 sm:mb-10">Slik fungerer det</h2>
+        <div className="grid sm:grid-cols-3 gap-6 sm:gap-8 text-center">
           {[
             { step: "1", title: "Legg ut verktøyet ditt", desc: "Legg til navn og beskrivelse. Tar 30 sekunder." },
             { step: "2", title: "Noen sender en forespørsel", desc: "En nabo sender en låneforespørsel med ønskede datoer." },
