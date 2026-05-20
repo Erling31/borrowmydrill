@@ -44,7 +44,7 @@ export default function MobileNav({ user }: Props) {
                 <Link
                   href="/tools/new"
                   onClick={() => setOpen(false)}
-                  className="py-3 text-base font-medium text-orange-600 border-b border-zinc-100"
+                  className="py-3 text-base font-medium text-coral-500 border-b border-warm-100"
                 >
                   Legg ut verktøy
                 </Link>
@@ -67,7 +67,7 @@ export default function MobileNav({ user }: Props) {
                 <Link
                   href="/auth/signup"
                   onClick={() => setOpen(false)}
-                  className="py-3 text-base font-medium text-orange-600"
+                  className="py-3 text-base font-medium text-coral-500"
                 >
                   Registrer deg
                 </Link>
