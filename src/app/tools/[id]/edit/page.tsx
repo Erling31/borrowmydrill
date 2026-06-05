@@ -1,44 +1,58 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
 
 type RecognizeStatus = "idle" | "recognizing" | "filled" | "failed";
 
-export default function NewToolPage() {
+export default function EditToolPage() {
   const router = useRouter();
+  const { id } = useParams<{ id: string }>();
   const { status } = useSession();
+
+  const [loading, setLoading] = useState(true);
+  const [notOwner, setNotOwner] = useState(false);
   const [form, setForm] = useState({ name: "", description: "", imageUrl: "", category: "" });
+  const [available, setAvailable] = useState(true);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Autocomplete state
+  // Autocomplete
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const suggestionsTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Camera / image state
+  // Image
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [recognizeStatus, setRecognizeStatus] = useState<RecognizeStatus>("idle");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (status === "unauthenticated") router.replace("/auth/signin?callbackUrl=/tools/new");
-  }, [status, router]);
-
-  // Debounced autocomplete fetch
-  const fetchSuggestions = useCallback((query: string) => {
-    if (suggestionsTimeout.current) clearTimeout(suggestionsTimeout.current);
-    if (query.length < 2) {
-      setSuggestions([]);
-      setShowSuggestions(false);
+    if (status === "unauthenticated") {
+      router.replace(`/auth/signin?callbackUrl=/tools/${id}/edit`);
       return;
     }
+    if (status !== "authenticated") return;
+
+    fetch(`/api/tools/${id}`)
+      .then((r) => r.json())
+      .then((tool) => {
+        if (!tool || tool.error) { router.replace("/tools"); return; }
+        setForm({ name: tool.name, description: tool.description, imageUrl: tool.imageUrl ?? "", category: tool.category ?? "" });
+        setAvailable(tool.available);
+        if (tool.imageUrl) setImagePreview(tool.imageUrl);
+        setLoading(false);
+      });
+  }, [status, id, router]);
+
+  const fetchSuggestions = useCallback((query: string) => {
+    if (suggestionsTimeout.current) clearTimeout(suggestionsTimeout.current);
+    if (query.length < 2) { setSuggestions([]); setShowSuggestions(false); return; }
     suggestionsTimeout.current = setTimeout(async () => {
       setLoadingSuggestions(true);
       try {
@@ -63,19 +77,14 @@ export default function NewToolPage() {
     setShowSuggestions(false);
   }
 
-  // Camera / image handling
   async function handleImageFile(file: File) {
     if (!file.type.startsWith("image/")) return;
-
-    // Show local preview immediately
     const reader = new FileReader();
     reader.onload = (e) => setImagePreview(e.target?.result as string);
     reader.readAsDataURL(file);
 
-    // Compress with Canvas before uploading / sending to AI
     const compressed = await compressImage(file, 1024, 0.85);
 
-    // Recognize with Claude Vision
     setRecognizeStatus("recognizing");
     try {
       const base64 = await blobToBase64(compressed);
@@ -88,11 +97,7 @@ export default function NewToolPage() {
       if (res.ok) {
         const { name, description } = await res.json();
         if (name || description) {
-          setForm((f) => ({
-            ...f,
-            name: name || f.name,
-            description: description || f.description,
-          }));
+          setForm((f) => ({ ...f, name: name || f.name, description: description || f.description }));
           setRecognizeStatus("filled");
         } else {
           setRecognizeStatus("failed");
@@ -104,7 +109,6 @@ export default function NewToolPage() {
       setRecognizeStatus("failed");
     }
 
-    // Upload file (runs regardless of recognition result)
     setUploading(true);
     try {
       const fd = new FormData();
@@ -124,10 +128,10 @@ export default function NewToolPage() {
     setSubmitting(true);
     setError("");
 
-    const res = await fetch("/api/tools", {
-      method: "POST",
+    const res = await fetch(`/api/tools/${id}`, {
+      method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, available }),
     });
 
     if (!res.ok) {
@@ -137,27 +141,29 @@ export default function NewToolPage() {
       return;
     }
 
-    router.push("/tools?listed=1");
+    router.push(`/tools/${id}`);
+    router.refresh();
   }
 
   const isRecognizing = recognizeStatus === "recognizing";
   const isBusy = isRecognizing || uploading;
 
-  if (status === "loading" || status === "unauthenticated") return null;
+  if (status === "loading" || loading) return null;
+  if (notOwner) return null;
 
   return (
     <div className="max-w-lg mx-auto px-4 py-8">
       <Link
-        href="/tools"
+        href={`/tools/${id}`}
         className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-[#1e1f21] mb-5 py-1 transition-colors"
       >
         ← Tilbake til verktøy
       </Link>
 
       <div className="bg-white rounded-2xl shadow-sm p-6 sm:p-8">
-        <h1 className="text-xl font-bold text-[#1e1f21] mb-6">Legg ut et verktøy</h1>
+        <h1 className="text-xl font-bold text-[#1e1f21] mb-6">Rediger verktøy</h1>
 
-        {/* Camera / image picker */}
+        {/* Image picker */}
         <div className="mb-5">
           <p className="text-sm font-medium text-zinc-700 mb-2">Bilde</p>
           <input
@@ -166,10 +172,7 @@ export default function NewToolPage() {
             accept="image/*"
             capture="environment"
             className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handleImageFile(file);
-            }}
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageFile(f); }}
           />
 
           {imagePreview ? (
@@ -184,19 +187,28 @@ export default function NewToolPage() {
                 </div>
               )}
               {!isBusy && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setImagePreview(null);
-                    setRecognizeStatus("idle");
-                    setForm((f) => ({ ...f, imageUrl: "" }));
-                    if (fileInputRef.current) fileInputRef.current.value = "";
-                  }}
-                  className="absolute top-2 right-2 bg-black/50 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm hover:bg-black/70"
-                  aria-label="Fjern bilde"
-                >
-                  ✕
-                </button>
+                <div className="absolute bottom-2 right-2 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="bg-black/50 text-white text-xs font-medium px-3 py-1.5 rounded-full hover:bg-black/70"
+                  >
+                    Bytt bilde
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImagePreview(null);
+                      setForm((f) => ({ ...f, imageUrl: "" }));
+                      setRecognizeStatus("idle");
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                    className="bg-black/50 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm hover:bg-black/70"
+                    aria-label="Fjern bilde"
+                  >
+                    ✕
+                  </button>
+                </div>
               )}
             </div>
           ) : (
@@ -210,12 +222,10 @@ export default function NewToolPage() {
                 <circle cx="12" cy="13" r="4" />
               </svg>
               <span className="text-sm font-medium">Ta bilde eller velg fra galleri</span>
-              <span className="text-xs">AI gjenkjenner verktøyet automatisk</span>
             </button>
           )}
         </div>
 
-        {/* AI status banners */}
         {recognizeStatus === "filled" && (
           <div className="mb-4 flex items-center gap-2 bg-green-50 text-green-700 text-sm font-medium px-4 py-3 rounded-xl">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -236,6 +246,20 @@ export default function NewToolPage() {
         )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+            Kategori
+            <select
+              value={form.category}
+              onChange={(e) => setForm({ ...form, category: e.target.value })}
+              className="border border-warm-200 rounded-xl px-3 py-3 text-base bg-warm-50 focus:outline-none focus:ring-2 focus:ring-coral-400 focus:bg-white transition-colors"
+            >
+              <option value="">Velg kategori…</option>
+              {["El-verktøy", "Håndverktøy", "Hage", "Stiger", "Annet"].map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </label>
+
           {/* Name with autocomplete */}
           <div className="relative flex flex-col gap-1.5">
             <label className="text-sm font-medium text-zinc-700" htmlFor="tool-name">
@@ -250,9 +274,7 @@ export default function NewToolPage() {
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
                 onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                 className={`w-full border rounded-xl px-3 py-3 text-base bg-warm-50 focus:outline-none focus:ring-2 focus:ring-coral-400 focus:bg-white transition-colors pr-9 ${
-                  recognizeStatus === "filled" && form.name
-                    ? "border-green-300 bg-green-50"
-                    : "border-warm-200"
+                  recognizeStatus === "filled" && form.name ? "border-green-300 bg-green-50" : "border-warm-200"
                 }`}
                 placeholder="f.eks. DeWalt drill"
                 autoComplete="off"
@@ -261,7 +283,6 @@ export default function NewToolPage() {
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-coral-400 border-t-transparent rounded-full animate-spin" />
               )}
             </div>
-
             {showSuggestions && suggestions.length > 0 && (
               <ul className="absolute top-full left-0 right-0 mt-1 bg-white border border-warm-200 rounded-xl shadow-lg z-20 overflow-hidden">
                 {suggestions.map((s, i) => (
@@ -280,20 +301,6 @@ export default function NewToolPage() {
           </div>
 
           <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-            Kategori
-            <select
-              value={form.category}
-              onChange={(e) => setForm({ ...form, category: e.target.value })}
-              className="border border-warm-200 rounded-xl px-3 py-3 text-base bg-warm-50 focus:outline-none focus:ring-2 focus:ring-coral-400 focus:bg-white transition-colors"
-            >
-              <option value="">Velg kategori…</option>
-              {["El-verktøy", "Håndverktøy", "Hage", "Stiger", "Annet"].map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </label>
-
-          <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
             Beskrivelse
             <textarea
               required
@@ -301,12 +308,26 @@ export default function NewToolPage() {
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               rows={4}
               className={`border rounded-xl px-3 py-3 text-base bg-warm-50 focus:outline-none focus:ring-2 focus:ring-coral-400 focus:bg-white transition-colors resize-none ${
-                recognizeStatus === "filled" && form.description
-                  ? "border-green-300 bg-green-50"
-                  : "border-warm-200"
+                recognizeStatus === "filled" && form.description ? "border-green-300 bg-green-50" : "border-warm-200"
               }`}
               placeholder="Merke, tilstand, hva det passer til..."
             />
+          </label>
+
+          {/* Availability toggle */}
+          <label className="flex items-center justify-between py-3 border-t border-warm-100">
+            <span className="text-sm font-medium text-zinc-700">Tilgjengelig for utlån</span>
+            <button
+              type="button"
+              onClick={() => setAvailable((v) => !v)}
+              className={`relative w-11 h-6 rounded-full transition-colors ${available ? "bg-coral-500" : "bg-zinc-200"}`}
+              role="switch"
+              aria-checked={available}
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${available ? "translate-x-5" : "translate-x-0"}`}
+              />
+            </button>
           </label>
 
           {error && <p className="text-sm text-red-500">{error}</p>}
@@ -316,15 +337,13 @@ export default function NewToolPage() {
             disabled={submitting || isBusy}
             className="mt-1 bg-coral-500 text-white py-4 rounded-full font-semibold hover:bg-coral-600 active:bg-coral-700 transition-colors disabled:opacity-60 shadow-sm"
           >
-            {submitting ? "Legger ut…" : "Legg ut verktøy"}
+            {submitting ? "Lagrer…" : "Lagre endringer"}
           </button>
         </form>
       </div>
     </div>
   );
 }
-
-// --- helpers ---
 
 function compressImage(file: File, maxSize: number, quality: number): Promise<File> {
   return new Promise((resolve) => {
@@ -334,22 +353,15 @@ function compressImage(file: File, maxSize: number, quality: number): Promise<Fi
       URL.revokeObjectURL(url);
       let { width, height } = img;
       if (width > maxSize || height > maxSize) {
-        if (width > height) {
-          height = Math.round((height * maxSize) / width);
-          width = maxSize;
-        } else {
-          width = Math.round((width * maxSize) / height);
-          height = maxSize;
-        }
+        if (width > height) { height = Math.round((height * maxSize) / width); width = maxSize; }
+        else { width = Math.round((width * maxSize) / height); height = maxSize; }
       }
       const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = width; canvas.height = height;
       canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
       canvas.toBlob(
         (blob) => resolve(new File([blob!], "tool.jpg", { type: "image/jpeg" })),
-        "image/jpeg",
-        quality,
+        "image/jpeg", quality,
       );
     };
     img.src = url;
@@ -359,10 +371,7 @@ function compressImage(file: File, maxSize: number, quality: number): Promise<Fi
 function blobToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      resolve(dataUrl.split(",")[1]);
-    };
+    reader.onload = () => resolve((reader.result as string).split(",")[1]);
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });

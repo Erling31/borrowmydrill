@@ -22,6 +22,8 @@ model Tool {
   id           String          @id @default(cuid())
   name         String
   description  String
+  category     String?
+  imageUrl     String?
   available    Boolean         @default(true)
   createdAt    DateTime        @default(now())
   ownerId      String

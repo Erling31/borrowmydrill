@@ -1,32 +1,36 @@
 @import "tailwindcss";
 
-/* Custom colors — must be in @theme (not inline) for Tailwind v4 to generate utilities */
+/* Design direction locked: Skog green · Source Sans 3 · Naboverktøy */
 @theme {
-  --color-coral-50:  #fff5f3;
-  --color-coral-100: #ffe8e4;
-  --color-coral-200: #ffd0c8;
-  --color-coral-300: #ffab9e;
-  --color-coral-400: #f57d6a;
-  --color-coral-500: #e8614b;
-  --color-coral-600: #d44a34;
-  --color-coral-700: #b23828;
+  /* Primary accent — Skog green */
+  --color-coral-50:  #f0f7f1;
+  --color-coral-100: #e4efe5;
+  --color-coral-200: #c0dfc8;
+  --color-coral-300: #8ec4a0;
+  --color-coral-400: #5a9e6e;
+  --color-coral-500: #3f7d52;
+  --color-coral-600: #2f6340;
+  --color-coral-700: #1f4d2e;
 
-  --color-warm-50:  #faf9f7;
-  --color-warm-100: #f4f2ef;
-  --color-warm-200: #e8e5e0;
+  /* Neutral warm background */
+  --color-warm-50:  #f3f4f1;
+  --color-warm-100: #eceee9;
+  --color-warm-200: #e8e9e4;
 }
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-source-sans);
 }
 
 body {
-  background-color: #faf9f7;
-  color: #1e1f21;
+  background-color: #f3f4f1;
+  color: #1b1d19;
   -webkit-font-smoothing: antialiased;
 }
 
 * {
   -webkit-tap-highlight-color: transparent;
 }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

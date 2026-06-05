@@ -1,13 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Geist } from "next/font/google";
+import { Source_Sans_3 } from "next/font/google";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import SignOutButton from "@/components/SignOutButton";
 import SessionProvider from "@/components/SessionProvider";
 import MobileNav from "@/components/MobileNav";
+import BottomNav from "@/components/BottomNav";
 import "./globals.css";
 
-const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+const sourceSans = Source_Sans_3({ variable: "--font-source-sans", subsets: ["latin"], weight: ["400","500","600","700"] });
 
 export const metadata: Metadata = {
   title: "BorrowMyDrill – Del verktøy med naboene",
@@ -24,7 +25,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const session = await auth();
 
   return (
-    <html lang="nb" className={`${geist.variable} h-full`}>
+    <html lang="nb" className={`${sourceSans.variable} h-full`}>
       <body className="min-h-full flex flex-col bg-warm-50 text-[#1e1f21]">
         <header className="bg-white shadow-sm sticky top-0 z-40">
           <nav
@@ -64,12 +65,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </header>
 
         <SessionProvider>
-          <main className="flex-1">{children}</main>
+          <main className="flex-1 pb-[4.5rem] sm:pb-0">{children}</main>
+          {session?.user && <BottomNav />}
         </SessionProvider>
 
         <footer
-          className="bg-white border-t border-warm-200 py-6 text-center text-sm text-zinc-400"
-          style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
+          className="hidden sm:block bg-white border-t border-warm-200 py-6 text-center text-sm text-zinc-400"
         >
           BorrowMyDrill — holder verktøy i nabolaget
         </footer>
