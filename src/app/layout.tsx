@@ -11,7 +11,7 @@ import "./globals.css";
 const sourceSans = Source_Sans_3({ variable: "--font-source-sans", subsets: ["latin"], weight: ["400","500","600","700"] });
 
 export const metadata: Metadata = {
-  title: "BorrowMyDrill – Del verktøy med naboene",
+  title: "Naboverktøy – Del verktøy med naboene",
   description: "Lån og del elektroverktøy med naboene dine.",
 };
 
@@ -33,7 +33,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             style={{ paddingLeft: "max(1rem, env(safe-area-inset-left))", paddingRight: "max(1rem, env(safe-area-inset-right))" }}
           >
             <Link href="/" className="font-bold text-lg tracking-tight text-coral-500">
-              BorrowMyDrill
+              Naboverktøy
             </Link>
 
             {/* Desktop nav */}
@@ -72,7 +72,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <footer
           className="hidden sm:block bg-white border-t border-warm-200 py-6 text-center text-sm text-zinc-400"
         >
-          BorrowMyDrill — holder verktøy i nabolaget
+          Naboverktøy — del verktøy med naboene
         </footer>
       </body>
     </html>

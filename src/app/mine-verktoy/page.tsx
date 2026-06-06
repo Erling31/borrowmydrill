@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
-export const metadata = { title: "Mine verktøy – BorrowMyDrill" };
+export const metadata = { title: "Mine verktøy – Naboverktøy" };
 
 const CATEGORIES = ["Alle", "El-verktøy", "Håndverktøy", "Hage", "Stiger", "Annet"];
 

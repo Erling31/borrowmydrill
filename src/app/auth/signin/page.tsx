@@ -36,7 +36,7 @@ export default function SignInPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-7">
           <h1 className="text-2xl font-bold text-[#1e1f21]">Velkommen tilbake</h1>
-          <p className="text-zinc-500 mt-1 text-sm">Logg inn på din BorrowMyDrill-konto</p>
+          <p className="text-zinc-500 mt-1 text-sm">Logg inn på din Naboverktøy-konto</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm p-6 sm:p-8">

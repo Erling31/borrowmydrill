@@ -3,7 +3,7 @@ import Image from "next/image";
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 
-export const metadata = { title: "Naboers verktøy – BorrowMyDrill" };
+export const metadata = { title: "Naboers verktøy – Naboverktøy" };
 
 const CATEGORIES = ["Alle", "El-verktøy", "Håndverktøy", "Hage", "Stiger", "Annet"];
 

@@ -5,7 +5,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import RequestActions from "@/components/RequestActions";
 
-export const metadata = { title: "Utlån – BorrowMyDrill" };
+export const metadata = { title: "Utlån – Naboverktøy" };
 
 function timeProgress(start: Date, end: Date): number {
   const now = Date.now();

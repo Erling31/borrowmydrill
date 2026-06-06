@@ -155,7 +155,7 @@ function LandingPage() {
             <span className="text-coral-500">Spør naboen.</span>
           </h1>
           <p className="mt-5 text-base sm:text-lg text-zinc-500 leading-relaxed">
-            BorrowMyDrill gjør det enkelt å låne og dele elektroverktøy med folk i nabolaget.
+            Naboverktøy gjør det enkelt å låne og dele elektroverktøy med folk i nabolaget.
             Ingen tur til butikken – ingen grunn til å kjøpe verktøy du bruker én gang.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
