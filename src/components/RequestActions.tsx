@@ -3,10 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-interface Props {
-  requestId: string;
-  showReturn?: boolean;
-}
+const T = { accent: "#3f7d52", accentInk: "#143524", surface: "#ffffff", hair: "#e8e9e4", muted: "#71756d" };
+
+const btnBase: React.CSSProperties = {
+  flex: 1, padding: "8px 12px", borderRadius: 12, fontSize: 13, fontWeight: 700,
+  letterSpacing: "-0.01em", textAlign: "center", border: "none", cursor: "pointer",
+  display: "flex", alignItems: "center", justifyContent: "center",
+};
+
+interface Props { requestId: string; showReturn?: boolean; }
 
 export default function RequestActions({ requestId, showReturn = false }: Props) {
   const router = useRouter();
@@ -28,7 +33,7 @@ export default function RequestActions({ requestId, showReturn = false }: Props)
       <button
         onClick={() => updateStatus("returned")}
         disabled={!!loading}
-        className="w-full bg-coral-500 text-white py-2.5 rounded-full text-sm font-semibold hover:bg-coral-600 active:bg-coral-700 transition-colors disabled:opacity-60"
+        style={{ ...btnBase, flex: "unset", width: "100%", background: T.accent, color: T.accentInk, boxShadow: `0 6px 16px -8px ${T.accent}`, opacity: loading ? 0.6 : 1 }}
       >
         {loading === "returned" ? "Registrerer…" : "Markér som returnert"}
       </button>
@@ -36,18 +41,18 @@ export default function RequestActions({ requestId, showReturn = false }: Props)
   }
 
   return (
-    <div className="flex gap-2">
+    <div style={{ display: "flex", gap: 8 }}>
       <button
         onClick={() => updateStatus("rejected")}
         disabled={!!loading}
-        className="flex-1 border border-warm-200 text-zinc-600 py-2.5 rounded-full text-sm font-semibold hover:bg-warm-50 transition-colors disabled:opacity-60"
+        style={{ ...btnBase, background: T.surface, color: T.muted, border: `1px solid ${T.hair}`, opacity: loading ? 0.6 : 1 }}
       >
         {loading === "rejected" ? "…" : "Avslå"}
       </button>
       <button
         onClick={() => updateStatus("approved")}
         disabled={!!loading}
-        className="flex-[2] bg-coral-500 text-white py-2.5 rounded-full text-sm font-semibold hover:bg-coral-600 active:bg-coral-700 transition-colors disabled:opacity-60"
+        style={{ ...btnBase, flex: 2, background: T.accent, color: T.accentInk, boxShadow: `0 6px 16px -8px ${T.accent}`, opacity: loading ? 0.6 : 1 }}
       >
         {loading === "approved" ? "Godkjenner…" : "Godta"}
       </button>

@@ -7,6 +7,12 @@ export const metadata = { title: "Naboers verktøy – Naboverktøy" };
 
 const CATEGORIES = ["Alle", "El-verktøy", "Håndverktøy", "Hage", "Stiger", "Annet"];
 
+const T = {
+  surface: "#ffffff", bg: "#f3f4f1", text: "#1b1d19",
+  muted: "#71756d", hair: "#e8e9e4", hair2: "#f0f1ec",
+  accent: "#3f7d52", accentSoft: "#e4efe5", accentInk: "#143524",
+};
+
 export default async function ToolsPage({
   searchParams,
 }: {
@@ -16,104 +22,88 @@ export default async function ToolsPage({
   const activeCategory = kat && CATEGORIES.includes(kat) ? kat : "Alle";
 
   const tools = await db.tool.findMany({
-    where: {
-      ...(activeCategory !== "Alle" ? { category: activeCategory } : {}),
-    },
-    include: { owner: { select: { name: true, neighborhood: true } } },
+    where: { ...(activeCategory !== "Alle" ? { category: activeCategory } : {}) },
+    include: { owner: { select: { id: true, name: true, neighborhood: true } } },
     orderBy: { createdAt: "desc" },
   });
 
-  // Exclude own tools if logged in (to show as neighbor view)
   const neighborTools = session?.user?.id
-    ? tools.filter((t) => t.owner.name !== session.user?.name)
+    ? tools.filter((t) => t.owner.id !== session.user?.id)
     : tools;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-xl font-bold text-[#1e1f21]">Verktøy i nabolaget</h1>
-          {neighborTools.length > 0 && (
-            <p className="text-sm text-zinc-500 mt-0.5">{neighborTools.length} verktøy tilgjengelig</p>
-          )}
+    <div style={{ maxWidth: 480, margin: "0 auto" }}>
+      {/* Header */}
+      <div style={{ background: T.surface, padding: "16px 16px 12px", borderBottom: `1px solid ${T.hair}`, display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.02em", color: T.text }}>Naboer</div>
+          <div style={{ fontSize: 12, color: T.muted, marginTop: 2 }}>{neighborTools.length} verktøy i nabolaget</div>
         </div>
-        {session?.user && (
-          <Link
-            href="/tools/new"
-            className="bg-coral-500 text-white px-4 py-2.5 rounded-full text-sm font-semibold hover:bg-coral-600 transition-colors shadow-sm"
-          >
-            Legg ut
-          </Link>
-        )}
+        <div style={{ width: 38, height: 38, borderRadius: 11, background: T.bg, color: T.text, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </div>
       </div>
 
       {/* Category filter chips */}
-      <div className="flex gap-2 overflow-x-auto pb-1 mb-5 no-scrollbar">
-        {CATEGORIES.map((cat) => (
-          <Link
-            key={cat}
-            href={cat === "Alle" ? "/tools" : `/tools?kat=${encodeURIComponent(cat)}`}
-            className={`shrink-0 px-4 py-2 rounded-full text-sm font-semibold border transition-colors ${
-              activeCategory === cat
-                ? "bg-coral-500 text-white border-coral-500"
-                : "bg-white text-zinc-600 border-warm-200 hover:border-coral-300"
-            }`}
-          >
-            {cat}
-          </Link>
-        ))}
+      <div style={{ background: T.surface, padding: "0 16px 10px", borderBottom: `1px solid ${T.hair}` }}>
+        <div className="no-scrollbar" style={{ display: "flex", gap: 8, overflowX: "auto", paddingTop: 10 }}>
+          {CATEGORIES.map((cat) => {
+            const active = activeCategory === cat;
+            return (
+              <Link
+                key={cat}
+                href={cat === "Alle" ? "/tools" : `/tools?kat=${encodeURIComponent(cat)}`}
+                style={{ textDecoration: "none", whiteSpace: "nowrap", fontSize: 12.5, fontWeight: 600, padding: "6px 13px", borderRadius: 999, color: active ? T.accentInk : T.text, background: active ? T.accent : T.surface, border: `1px solid ${active ? "transparent" : T.hair}` }}
+              >
+                {cat}
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
+      {/* Tool list */}
       {neighborTools.length === 0 ? (
-        <div className="text-center py-20">
-          <div className="text-4xl mb-3">🔧</div>
-          <p className="text-zinc-500 font-medium">
-            {activeCategory !== "Alle"
-              ? `Ingen verktøy i kategorien "${activeCategory}".`
-              : "Ingen verktøy er lagt ut ennå."}
+        <div style={{ textAlign: "center", padding: "64px 16px", color: T.muted }}>
+          <div style={{ fontSize: 36, marginBottom: 12 }}>🔧</div>
+          <p style={{ fontWeight: 500, margin: 0 }}>
+            {activeCategory !== "Alle" ? `Ingen verktøy i "${activeCategory}".` : "Ingen verktøy er lagt ut ennå."}
           </p>
-          {session?.user && (
-            <Link href="/tools/new" className="mt-3 inline-block text-coral-500 font-semibold hover:underline text-sm">
-              Vær den første!
-            </Link>
-          )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div style={{ padding: "8px 0" }}>
           {neighborTools.map((tool) => (
-            <Link
-              key={tool.id}
-              href={`/tools/${tool.id}`}
-              className="bg-white rounded-2xl shadow-sm hover:shadow-md active:scale-[0.99] transition-all overflow-hidden"
-            >
-              {tool.imageUrl ? (
-                <div className="relative w-full aspect-video bg-warm-100">
-                  <Image src={tool.imageUrl} alt={tool.name} fill className="object-cover" />
+            <div key={tool.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", background: T.surface, borderBottom: `1px solid ${T.hair2}` }}>
+              {/* Tool image */}
+              <Link href={`/tools/${tool.id}`} style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0 }}>
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: "linear-gradient(135deg,#eceee9,#e2e5de)", border: `1px solid ${T.hair}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
+                  {tool.imageUrl ? (
+                    <Image src={tool.imageUrl} alt={tool.name} width={48} height={48} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : (
+                    <span style={{ fontSize: 20 }}>🔧</span>
+                  )}
                 </div>
-              ) : (
-                <div className="w-full aspect-video bg-coral-50 flex items-center justify-center text-4xl">🔧</div>
-              )}
-              <div className="p-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-[#1e1f21] leading-snug truncate">{tool.name}</h3>
-                    <p className="text-xs text-zinc-500 mt-1">{tool.owner.name} · {tool.owner.neighborhood}</p>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: 14.5, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tool.name}</div>
+                  <div style={{ fontSize: 12, color: T.muted, marginTop: 2 }}>
+                    {tool.owner.name?.split(" ")[0]} · {tool.owner.neighborhood}
                   </div>
-                  <span
-                    className={`shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full ${
-                      tool.available ? "bg-green-100 text-green-700" : "bg-zinc-100 text-zinc-500"
-                    }`}
-                  >
-                    {tool.available ? "Ledig" : "Utlånt"}
-                  </span>
                 </div>
-                {tool.category && (
-                  <span className="mt-2 inline-block text-xs bg-warm-100 text-zinc-500 px-2 py-0.5 rounded-full">
-                    {tool.category}
-                  </span>
-                )}
-              </div>
-            </Link>
+              </Link>
+              {/* Action */}
+              {tool.available ? (
+                <Link
+                  href={`/tools/${tool.id}/request`}
+                  style={{ textDecoration: "none", background: T.accent, color: T.accentInk, borderRadius: 10, padding: "8px 12px", fontSize: 13, fontWeight: 700, letterSpacing: "-0.01em", flexShrink: 0, boxShadow: `0 6px 16px -8px ${T.accent}` }}
+                >
+                  Spør
+                </Link>
+              ) : (
+                <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 999, color: T.muted, background: T.bg, border: `1px solid transparent`, flexShrink: 0 }}>opptatt</span>
+              )}
+            </div>
           ))}
         </div>
       )}

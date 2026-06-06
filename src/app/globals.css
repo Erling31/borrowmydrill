@@ -11,11 +11,21 @@
   --color-coral-500: #3f7d52;
   --color-coral-600: #2f6340;
   --color-coral-700: #1f4d2e;
+  --color-coral-ink: #143524;
 
-  /* Neutral warm background */
+  /* Neutral warm background — matches mfTheme */
   --color-warm-50:  #f3f4f1;
   --color-warm-100: #eceee9;
   --color-warm-200: #e8e9e4;
+  --color-warm-300: #f0f1ec;
+
+  /* Status chip tones */
+  --color-status-ok-text: #2f6e44;
+  --color-status-ok-bg:   #e2f0e5;
+  --color-status-ok-border: #cbe4d1;
+  --color-status-warn-text: #9a6a12;
+  --color-status-warn-bg:   #fcf0d8;
+  --color-status-warn-border: #f2dca8;
 }
 
 @theme inline {

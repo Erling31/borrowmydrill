@@ -8,6 +8,22 @@ export const metadata = { title: "Mine verktøy – Naboverktøy" };
 
 const CATEGORIES = ["Alle", "El-verktøy", "Håndverktøy", "Hage", "Stiger", "Annet"];
 
+const T = {
+  surface: "#ffffff", bg: "#f3f4f1", text: "#1b1d19",
+  muted: "#71756d", hair: "#e8e9e4", hair2: "#f0f1ec",
+  accent: "#3f7d52", accentSoft: "#e4efe5", accentInk: "#143524",
+};
+
+function StatusChip({ status }: { status: string }) {
+  if (status === "home") {
+    return <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 999, color: "#2f6e44", background: "#e2f0e5", border: "1px solid #cbe4d1", whiteSpace: "nowrap" }}>hjemme</span>;
+  }
+  if (status === "overdue") {
+    return <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 999, color: T.accentInk, background: T.accentSoft, border: "1px solid transparent", whiteSpace: "nowrap" }}>forfalt</span>;
+  }
+  return <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 999, color: "#9a6a12", background: "#fcf0d8", border: "1px solid #f2dca8", whiteSpace: "nowrap" }}>utlånt</span>;
+}
+
 export default async function MineVerktoyPage({
   searchParams,
 }: {
@@ -27,73 +43,66 @@ export default async function MineVerktoyPage({
     orderBy: { createdAt: "desc" },
   });
 
+  const lentCount = tools.filter(t => !t.available).length;
+
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold text-[#1e1f21]">Mine verktøy</h1>
-        <Link
-          href="/tools/new"
-          className="bg-coral-500 text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-coral-600 transition-colors shadow-sm"
-        >
-          + Legg til
+    <div style={{ maxWidth: 480, margin: "0 auto" }}>
+      {/* Header */}
+      <div style={{ background: T.surface, padding: "16px 16px 12px", borderBottom: `1px solid ${T.hair}`, display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.02em", color: T.text }}>Mine verktøy</div>
+          <div style={{ fontSize: 12, color: T.muted, marginTop: 2 }}>{tools.length} totalt · {lentCount} utlånt</div>
+        </div>
+        <Link href="/tools/new" style={{ width: 38, height: 38, borderRadius: 11, background: T.bg, color: T.text, display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none" }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </Link>
       </div>
 
       {/* Category filter chips */}
-      <div className="flex gap-2 overflow-x-auto pb-1 mb-4 no-scrollbar">
-        {CATEGORIES.map((cat) => (
-          <Link
-            key={cat}
-            href={cat === "Alle" ? "/mine-verktoy" : `/mine-verktoy?kat=${encodeURIComponent(cat)}`}
-            className={`shrink-0 px-4 py-2 rounded-full text-sm font-semibold border transition-colors ${
-              activeCategory === cat
-                ? "bg-coral-500 text-white border-coral-500"
-                : "bg-white text-zinc-600 border-warm-200 hover:border-coral-300"
-            }`}
-          >
-            {cat}
-          </Link>
-        ))}
+      <div style={{ background: T.surface, padding: "0 16px 10px", borderBottom: `1px solid ${T.hair}` }}>
+        <div className="no-scrollbar" style={{ display: "flex", gap: 8, overflowX: "auto", paddingTop: 10 }}>
+          {CATEGORIES.map((cat) => {
+            const active = activeCategory === cat;
+            return (
+              <Link
+                key={cat}
+                href={cat === "Alle" ? "/mine-verktoy" : `/mine-verktoy?kat=${encodeURIComponent(cat)}`}
+                style={{ textDecoration: "none", whiteSpace: "nowrap", fontSize: 12.5, fontWeight: 600, padding: "6px 13px", borderRadius: 999, color: active ? T.accentInk : T.text, background: active ? T.accent : T.surface, border: `1px solid ${active ? "transparent" : T.hair}` }}
+              >
+                {cat}
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
+      {/* Tool list */}
       {tools.length === 0 ? (
-        <div className="text-center py-20">
-          <div className="text-4xl mb-3">🔧</div>
-          <p className="text-zinc-500 font-medium">
-            {activeCategory !== "Alle" ? `Ingen verktøy i kategorien "${activeCategory}".` : "Du har ikke lagt ut noe ennå."}
+        <div style={{ textAlign: "center", padding: "64px 16px", color: T.muted }}>
+          <div style={{ fontSize: 36, marginBottom: 12 }}>🔧</div>
+          <p style={{ fontWeight: 500, margin: 0 }}>
+            {activeCategory !== "Alle" ? `Ingen verktøy i "${activeCategory}".` : "Du har ikke lagt ut noe ennå."}
           </p>
-          <Link href="/tools/new" className="mt-3 inline-block text-coral-500 font-semibold hover:underline text-sm">
-            Legg ut ditt første verktøy
+          <Link href="/tools/new" style={{ display: "inline-block", marginTop: 8, fontSize: 13.5, fontWeight: 700, color: T.accent, textDecoration: "none" }}>
+            Legg til verktøy
           </Link>
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div style={{ padding: "8px 0" }}>
           {tools.map((tool) => (
-            <Link
-              key={tool.id}
-              href={`/tools/${tool.id}`}
-              className="bg-white rounded-2xl shadow-sm hover:shadow-md active:scale-[0.99] transition-all flex items-center gap-4 p-4"
-            >
-              <div className="w-14 h-14 rounded-xl bg-coral-50 flex items-center justify-center text-2xl overflow-hidden shrink-0">
+            <Link key={tool.id} href={`/tools/${tool.id}`} style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12, padding: "11px 16px", background: T.surface, borderBottom: `1px solid ${T.hair2}` }}>
+              <div style={{ width: 50, height: 50, borderRadius: 12, background: "linear-gradient(135deg,#eceee9,#e2e5de)", border: `1px solid ${T.hair}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
                 {tool.imageUrl ? (
-                  <Image src={tool.imageUrl} alt={tool.name} width={56} height={56} className="w-full h-full object-cover" />
+                  <Image src={tool.imageUrl} alt={tool.name} width={50} height={50} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : (
-                  "🔧"
+                  <span style={{ fontSize: 22 }}>🔧</span>
                 )}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-[#1e1f21] truncate">{tool.name}</p>
-                <p className="text-xs text-zinc-400 mt-0.5">
-                  {tool.category ?? "Ukategorisert"}
-                </p>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 600, fontSize: 15, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tool.name}</div>
+                <div style={{ fontSize: 12, color: T.muted, marginTop: 2 }}>{tool.category ?? "Ukategorisert"}</div>
               </div>
-              <span
-                className={`shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full ${
-                  tool.available ? "bg-green-100 text-green-700" : "bg-amber-50 text-amber-600"
-                }`}
-              >
-                {tool.available ? "Ledig" : "Utlånt"}
-              </span>
+              <StatusChip status={tool.available ? "home" : "lent"} />
             </Link>
           ))}
         </div>
