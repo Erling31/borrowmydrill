@@ -15,8 +15,9 @@ export default function EditToolPage() {
 
   const [loading, setLoading] = useState(true);
   const [notOwner, setNotOwner] = useState(false);
-  const [form, setForm] = useState({ name: "", description: "", imageUrl: "", category: "" });
+  const [form, setForm] = useState({ name: "", description: "", imageUrl: "", category: "", value: "", condition: "God" });
   const [available, setAvailable] = useState(true);
+  const [visible, setVisible] = useState(true);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -43,8 +44,16 @@ export default function EditToolPage() {
       .then((r) => r.json())
       .then((tool) => {
         if (!tool || tool.error) { router.replace("/tools"); return; }
-        setForm({ name: tool.name, description: tool.description, imageUrl: tool.imageUrl ?? "", category: tool.category ?? "" });
+        setForm({
+          name: tool.name,
+          description: tool.description,
+          imageUrl: tool.imageUrl ?? "",
+          category: tool.category ?? "",
+          value: tool.value != null ? String(tool.value) : "",
+          condition: tool.condition ?? "God",
+        });
         setAvailable(tool.available);
+        setVisible(tool.visible !== false);
         if (tool.imageUrl) setImagePreview(tool.imageUrl);
         setLoading(false);
       });
@@ -131,7 +140,12 @@ export default function EditToolPage() {
     const res = await fetch(`/api/tools/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, available }),
+      body: JSON.stringify({
+        ...form,
+        value: form.value ? parseInt(form.value.replace(/\D/g, ""), 10) || null : null,
+        available,
+        visible,
+      }),
     });
 
     if (!res.ok) {
@@ -314,6 +328,32 @@ export default function EditToolPage() {
             />
           </label>
 
+          <div className="grid grid-cols-2 gap-4">
+            <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+              Verdi (kr)
+              <input
+                type="text"
+                inputMode="numeric"
+                value={form.value}
+                onChange={(e) => setForm({ ...form, value: e.target.value })}
+                className="border border-warm-200 rounded-xl px-3 py-3 text-base bg-warm-50 focus:outline-none focus:ring-2 focus:ring-coral-400 focus:bg-white transition-colors"
+                placeholder="f.eks. 1500"
+              />
+            </label>
+            <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+              Stand
+              <select
+                value={form.condition}
+                onChange={(e) => setForm({ ...form, condition: e.target.value })}
+                className="border border-warm-200 rounded-xl px-3 py-3 text-base bg-warm-50 focus:outline-none focus:ring-2 focus:ring-coral-400 focus:bg-white transition-colors"
+              >
+                {["Som ny", "God", "Brukt", "Slitt"].map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+
           {/* Availability toggle */}
           <label className="flex items-center justify-between py-3 border-t border-warm-100">
             <span className="text-sm font-medium text-zinc-700">Tilgjengelig for utlån</span>
@@ -326,6 +366,25 @@ export default function EditToolPage() {
             >
               <span
                 className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${available ? "translate-x-5" : "translate-x-0"}`}
+              />
+            </button>
+          </label>
+
+          {/* Visibility toggle */}
+          <label className="flex items-center justify-between py-3 border-t border-warm-100">
+            <span className="flex flex-col">
+              <span className="text-sm font-medium text-zinc-700">Synlig for naboer</span>
+              <span className="text-xs text-zinc-500">Vis dette verktøyet i nabolagets oversikt</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setVisible((v) => !v)}
+              className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${visible ? "bg-coral-500" : "bg-zinc-200"}`}
+              role="switch"
+              aria-checked={visible}
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${visible ? "translate-x-5" : "translate-x-0"}`}
               />
             </button>
           </label>

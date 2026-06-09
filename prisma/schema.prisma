@@ -13,9 +13,11 @@ model User {
   passwordHash String
   name         String
   neighborhood String
+  aiTone       String        @default("vennlig")
   createdAt    DateTime      @default(now())
   tools        Tool[]
   requests     BorrowRequest[]
+  notifications Notification[]
 }
 
 model Tool {
@@ -25,6 +27,9 @@ model Tool {
   category     String?
   imageUrl     String?
   available    Boolean         @default(true)
+  visible      Boolean         @default(true)
+  value        Int?
+  condition    String?         @default("God")
   createdAt    DateTime        @default(now())
   ownerId      String
   owner        User            @relation(fields: [ownerId], references: [id])
@@ -41,5 +46,17 @@ model BorrowRequest {
   startDate DateTime
   endDate   DateTime
   status    String   @default("pending")
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String
+  title     String
+  body      String
+  link      String?
+  read      Boolean  @default(false)
   createdAt DateTime @default(now())
 }

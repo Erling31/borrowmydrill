@@ -27,7 +27,7 @@ export async function PATCH(request: Request, { params }: Ctx) {
     return NextResponse.json({ error: "Ingen tilgang" }, { status: 403 });
   }
 
-  const { name, description, imageUrl, available } = await request.json();
+  const { name, description, imageUrl, available, category, value, condition, visible } = await request.json();
   const updated = await db.tool.update({
     where: { id },
     data: {
@@ -35,6 +35,10 @@ export async function PATCH(request: Request, { params }: Ctx) {
       ...(description !== undefined && { description }),
       ...(imageUrl !== undefined && { imageUrl }),
       ...(available !== undefined && { available }),
+      ...(category !== undefined && { category }),
+      ...(value !== undefined && { value }),
+      ...(condition !== undefined && { condition }),
+      ...(visible !== undefined && { visible }),
     },
   });
   return NextResponse.json(updated);

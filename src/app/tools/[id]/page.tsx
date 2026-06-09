@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
@@ -10,7 +9,15 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
   const [tool, session] = await Promise.all([
     db.tool.findUnique({
       where: { id },
-      include: { owner: { select: { id: true, name: true, neighborhood: true } } },
+      include: {
+        owner: { select: { id: true, name: true, neighborhood: true } },
+        requests: {
+          where: { status: { in: ["approved", "returned"] } },
+          include: { user: { select: { name: true } } },
+          orderBy: { createdAt: "desc" },
+          take: 10,
+        },
+      },
     }),
     auth(),
   ]);
@@ -27,8 +34,9 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         {/* Tool image */}
         {tool.imageUrl && (
-          <div className="relative w-full aspect-video bg-warm-100">
-            <Image src={tool.imageUrl} alt={tool.name} fill className="object-cover" />
+          <div className="w-full aspect-video bg-warm-100 overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={tool.imageUrl} alt={tool.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
           </div>
         )}
 
@@ -53,7 +61,41 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
 
           <h1 className="text-2xl font-bold text-[#1e1f21]">{tool.name}</h1>
           <p className="text-zinc-500 mt-1 text-sm">{tool.owner.name} · {tool.owner.neighborhood}</p>
+
+          {(tool.value || tool.condition) && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {tool.value != null && (
+                <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-warm-100 text-zinc-600">
+                  Verdi ca. {tool.value.toLocaleString("nb")} kr
+                </span>
+              )}
+              {tool.condition && (
+                <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-warm-100 text-zinc-600">
+                  Stand: {tool.condition}
+                </span>
+              )}
+            </div>
+          )}
+
           <p className="mt-4 text-zinc-600 leading-relaxed">{tool.description}</p>
+
+          {tool.requests.length > 0 && (
+            <div className="mt-7">
+              <h2 className="text-sm font-bold text-[#1e1f21] mb-3">Historikk</h2>
+              <div className="flex flex-col gap-2">
+                {tool.requests.map((r) => (
+                  <div key={r.id} className="flex items-center justify-between gap-3 bg-warm-50 rounded-xl px-4 py-3 text-sm">
+                    <span className="text-zinc-600">
+                      Lånt av <strong className="text-[#1e1f21] font-semibold">{r.user.name}</strong>
+                    </span>
+                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${r.status === "returned" ? "bg-zinc-100 text-zinc-500" : "bg-green-100 text-green-700"}`}>
+                      {r.status === "returned" ? "Returnert" : "Pågår"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {tool.available && !isOwner && (
             <Link

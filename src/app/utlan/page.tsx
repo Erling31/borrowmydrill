@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -194,7 +193,8 @@ function ToolThumb({ imageUrl, name }: { imageUrl: string | null; name: string }
   return (
     <div className="w-12 h-12 rounded-xl bg-coral-50 flex items-center justify-center text-xl overflow-hidden shrink-0">
       {imageUrl ? (
-        <Image src={imageUrl} alt={name} width={48} height={48} className="w-full h-full object-cover" />
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={imageUrl} alt={name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
       ) : (
         "🔧"
       )}

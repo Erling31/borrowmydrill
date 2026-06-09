@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { use } from "react";
+import MiniCalendar from "@/components/MiniCalendar";
 
 export default function RequestPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -21,6 +22,10 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!form.startDate || !form.endDate) {
+      setError("Velg en start- og sluttdato i kalenderen.");
+      return;
+    }
     setSubmitting(true);
     setError("");
 
@@ -48,27 +53,13 @@ export default function RequestPage({ params }: { params: Promise<{ id: string }
       <div className="bg-white rounded-2xl shadow-sm p-6 sm:p-8">
         <h1 className="text-xl font-bold text-[#1e1f21] mb-6">Send låneforespørsel</h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-              Fra
-              <input
-                required
-                type="date"
-                value={form.startDate}
-                onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                className="border border-warm-200 rounded-xl px-3 py-3 text-base bg-warm-50 focus:outline-none focus:ring-2 focus:ring-coral-400 focus:bg-white transition-colors"
-              />
-            </label>
-            <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-              Til
-              <input
-                required
-                type="date"
-                value={form.endDate}
-                onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                className="border border-warm-200 rounded-xl px-3 py-3 text-base bg-warm-50 focus:outline-none focus:ring-2 focus:ring-coral-400 focus:bg-white transition-colors"
-              />
-            </label>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-zinc-700">Når trenger du den?</span>
+            <MiniCalendar
+              startDate={form.startDate}
+              endDate={form.endDate}
+              onChange={(range) => setForm((f) => ({ ...f, ...range }))}
+            />
           </div>
           <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
             Hva skal du bruke det til? (valgfritt)

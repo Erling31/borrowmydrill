@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 
@@ -22,7 +21,7 @@ export default async function ToolsPage({
   const activeCategory = kat && CATEGORIES.includes(kat) ? kat : "Alle";
 
   const tools = await db.tool.findMany({
-    where: { ...(activeCategory !== "Alle" ? { category: activeCategory } : {}) },
+    where: { visible: true, ...(activeCategory !== "Alle" ? { category: activeCategory } : {}) },
     include: { owner: { select: { id: true, name: true, neighborhood: true } } },
     orderBy: { createdAt: "desc" },
   });
@@ -30,6 +29,23 @@ export default async function ToolsPage({
   const neighborTools = session?.user?.id
     ? tools.filter((t) => t.owner.id !== session.user?.id)
     : tools;
+
+  // Count completed loans per owner ("lånt X ganger")
+  const ownerIds = [...new Set(neighborTools.map((t) => t.owner.id))];
+  const loanCounts = ownerIds.length
+    ? await db.borrowRequest.groupBy({
+        by: ["toolId"],
+        where: { tool: { ownerId: { in: ownerIds } }, status: "returned" },
+        _count: { _all: true },
+      })
+    : [];
+  const toolLoanCount = new Map(loanCounts.map((l) => [l.toolId, l._count._all]));
+  // Aggregate to owner level
+  const ownerLoanCount = new Map<string, number>();
+  for (const t of neighborTools) {
+    const c = toolLoanCount.get(t.id) ?? 0;
+    ownerLoanCount.set(t.owner.id, (ownerLoanCount.get(t.owner.id) ?? 0) + c);
+  }
 
   return (
     <div style={{ maxWidth: 480, margin: "0 auto" }}>
@@ -80,7 +96,8 @@ export default async function ToolsPage({
               <Link href={`/tools/${tool.id}`} style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0 }}>
                 <div style={{ width: 48, height: 48, borderRadius: 12, background: "linear-gradient(135deg,#eceee9,#e2e5de)", border: `1px solid ${T.hair}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
                   {tool.imageUrl ? (
-                    <Image src={tool.imageUrl} alt={tool.name} width={48} height={48} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={tool.imageUrl} alt={tool.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                   ) : (
                     <span style={{ fontSize: 20 }}>🔧</span>
                   )}
@@ -89,6 +106,9 @@ export default async function ToolsPage({
                   <div style={{ fontWeight: 600, fontSize: 14.5, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tool.name}</div>
                   <div style={{ fontSize: 12, color: T.muted, marginTop: 2 }}>
                     {tool.owner.name?.split(" ")[0]} · {tool.owner.neighborhood}
+                    {(ownerLoanCount.get(tool.owner.id) ?? 0) > 0 && (
+                      <> · lånt ut {ownerLoanCount.get(tool.owner.id)} {ownerLoanCount.get(tool.owner.id) === 1 ? "gang" : "ganger"}</>
+                    )}
                   </div>
                 </div>
               </Link>

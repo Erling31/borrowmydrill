@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { notify } from "@/lib/notify";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -15,7 +16,7 @@ export async function PATCH(request: Request, { params }: Ctx) {
 
   const borrowRequest = await db.borrowRequest.findUnique({
     where: { id },
-    include: { tool: true },
+    include: { tool: { include: { owner: { select: { id: true, name: true } } } }, user: { select: { id: true, name: true } } },
   });
   if (!borrowRequest) {
     return NextResponse.json({ error: "Ikke funnet" }, { status: 404 });
@@ -44,6 +45,20 @@ export async function PATCH(request: Request, { params }: Ctx) {
       ? db.tool.update({ where: { id: borrowRequest.toolId }, data: { available: true } })
       : db.tool.findUnique({ where: { id: borrowRequest.toolId } }), // no-op query
   ]);
+
+  const toolName = borrowRequest.tool.name;
+  const ownerFirst = borrowRequest.tool.owner.name?.split(" ")[0] ?? "Eier";
+  const borrowerFirst = borrowRequest.user.name?.split(" ")[0] ?? "Låner";
+
+  if (status === "approved") {
+    await notify(borrowRequest.userId, "approved", `${ownerFirst} godtok lånet`, `${toolName} — klar til henting`, `/tools/${borrowRequest.toolId}`);
+  } else if (status === "rejected") {
+    await notify(borrowRequest.userId, "rejected", `${ownerFirst} avslo forespørselen`, `${toolName} er ikke tilgjengelig denne gangen`, `/tools/${borrowRequest.toolId}`);
+  } else if (status === "returned") {
+    const notifyUserId = isOwner ? borrowRequest.userId : borrowRequest.tool.ownerId;
+    const who = isOwner ? ownerFirst : borrowerFirst;
+    await notify(notifyUserId, "returned", `${who} bekreftet retur`, `${toolName} er registrert som returnert`, `/tools/${borrowRequest.toolId}`);
+  }
 
   return NextResponse.json(updated);
 }
