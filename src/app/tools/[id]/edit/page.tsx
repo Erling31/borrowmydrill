@@ -184,7 +184,6 @@ export default function EditToolPage() {
             ref={fileInputRef}
             type="file"
             accept="image/*"
-            capture="environment"
             className="hidden"
             onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageFile(f); }}
           />
