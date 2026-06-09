@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
-import { anthropic } from "@/lib/anthropic";
+import { GoogleGenAI } from "@google/genai";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+
+const genai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY ?? "" });
 
 const TONE_INSTRUCTIONS: Record<string, string> = {
   kort: "Skriv beskrivelsen kort og presist — maks én kort setning, uten fyllord.",
@@ -31,24 +33,7 @@ export async function POST(request: Request) {
 
   let raw = "";
   try {
-    const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 1024,
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "image",
-              source: {
-                type: "base64",
-                media_type: mediaType,
-                data: imageBase64,
-              },
-            },
-            {
-              type: "text",
-              text: `Du er en ekspert på verktøy og utstyr. Se på bildet og identifiser verktøyet.
+    const prompt = `Du er en ekspert på verktøy og utstyr. Se på bildet og identifiser verktøyet.
 
 Svar KUN med et JSON-objekt med disse feltene (ingen annen tekst, ingen kodeblokker):
 {
@@ -57,17 +42,25 @@ Svar KUN med et JSON-objekt med disse feltene (ingen annen tekst, ingen kodeblok
   "description": "Norsk beskrivelse. ${toneInstruction}"
 }
 
-Hvis du er usikker på merke/modell, skriv hva slags verktøy det er (f.eks. "Sirkelsag" eller "Høytrykkspyler").`,
-            },
+Hvis du er usikker på merke/modell, skriv hva slags verktøy det er (f.eks. "Sirkelsag" eller "Høytrykkspyler").`;
+
+    const result = await genai.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { inlineData: { mimeType: mediaType, data: imageBase64 } },
+            { text: prompt },
           ],
         },
       ],
     });
 
-    raw = message.content[0].type === "text" ? message.content[0].text : "";
+    raw = result.text ?? "";
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error("recognize: Anthropic API error:", msg);
+    console.error("recognize: Gemini API error:", msg);
     return NextResponse.json({ error: "AI-tjenesten er utilgjengelig", detail: msg }, { status: 502 });
   }
 
