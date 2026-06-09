@@ -86,12 +86,13 @@ export default function NewToolPage() {
         body: JSON.stringify({ imageBase64: base64, mediaType }),
       });
       if (res.ok) {
-        const { name, description } = await res.json();
+        const { name, category, description } = await res.json();
         if (name || description) {
           setForm((f) => ({
             ...f,
             name: name || f.name,
             description: description || f.description,
+            category: category || f.category,
           }));
           setRecognizeStatus("filled");
         } else {

@@ -30,8 +30,8 @@ export async function POST(request: Request) {
   const toneInstruction = TONE_INSTRUCTIONS[tone] ?? TONE_INSTRUCTIONS.vennlig;
 
   const message = await anthropic.messages.create({
-    model: "claude-haiku-4-5",
-    max_tokens: 512,
+    model: "claude-sonnet-4-6",
+    max_tokens: 1024,
     messages: [
       {
         role: "user",
@@ -46,12 +46,16 @@ export async function POST(request: Request) {
           },
           {
             type: "text",
-            text: `Identifiser verktøyet på bildet.
-Svar KUN med en JSON-objekt med disse feltene:
-- "name": Fullt navn med merke og modell (f.eks. "DeWalt DCD796 18V børsteløs drill")
-- "description": Norsk beskrivelse (1-2 setninger om hva verktøyet er og passer til). ${toneInstruction}
+            text: `Du er en ekspert på verktøy og utstyr. Se på bildet og identifiser verktøyet.
 
-Kun JSON, ingen annen tekst.`,
+Svar KUN med et JSON-objekt med disse feltene (ingen annen tekst, ingen kodeblokker):
+{
+  "name": "Fullt navn med merke og modell hvis synlig (f.eks. 'DeWalt DCD796 18V drill')",
+  "category": "Én av: El-verktøy, Håndverktøy, Hage, Stiger, Annet",
+  "description": "Norsk beskrivelse. ${toneInstruction}"
+}
+
+Hvis du er usikker på merke/modell, skriv hva slags verktøy det er (f.eks. "Sirkelsag" eller "Høytrykkspyler").`,
           },
         ],
       },
@@ -59,7 +63,7 @@ Kun JSON, ingen annen tekst.`,
   });
 
   const raw = message.content[0].type === "text" ? message.content[0].text : "";
-  // Strip markdown code fences Claude sometimes adds despite instructions
+  // Strip markdown code fences if present
   const json = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
   try {
     const result = JSON.parse(json);
