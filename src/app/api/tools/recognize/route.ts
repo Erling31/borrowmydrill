@@ -29,24 +29,26 @@ export async function POST(request: Request) {
   }
   const toneInstruction = TONE_INSTRUCTIONS[tone] ?? TONE_INSTRUCTIONS.vennlig;
 
-  const message = await anthropic.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 1024,
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "image",
-            source: {
-              type: "base64",
-              media_type: mediaType,
-              data: imageBase64,
+  let raw = "";
+  try {
+    const message = await anthropic.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1024,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "image",
+              source: {
+                type: "base64",
+                media_type: mediaType,
+                data: imageBase64,
+              },
             },
-          },
-          {
-            type: "text",
-            text: `Du er en ekspert på verktøy og utstyr. Se på bildet og identifiser verktøyet.
+            {
+              type: "text",
+              text: `Du er en ekspert på verktøy og utstyr. Se på bildet og identifiser verktøyet.
 
 Svar KUN med et JSON-objekt med disse feltene (ingen annen tekst, ingen kodeblokker):
 {
@@ -56,13 +58,19 @@ Svar KUN med et JSON-objekt med disse feltene (ingen annen tekst, ingen kodeblok
 }
 
 Hvis du er usikker på merke/modell, skriv hva slags verktøy det er (f.eks. "Sirkelsag" eller "Høytrykkspyler").`,
-          },
-        ],
-      },
-    ],
-  });
+            },
+          ],
+        },
+      ],
+    });
 
-  const raw = message.content[0].type === "text" ? message.content[0].text : "";
+    raw = message.content[0].type === "text" ? message.content[0].text : "";
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("recognize: Anthropic API error:", msg);
+    return NextResponse.json({ error: "AI-tjenesten er utilgjengelig", detail: msg }, { status: 502 });
+  }
+
   // Strip markdown code fences if present
   const json = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
   try {
@@ -70,6 +78,11 @@ Hvis du er usikker på merke/modell, skriv hva slags verktøy det er (f.eks. "Si
     return NextResponse.json(result);
   } catch {
     console.error("recognize: failed to parse Claude response:", raw);
+    // Return the raw text as description so the user still gets something useful
+    const fallback = raw.trim();
+    if (fallback) {
+      return NextResponse.json({ name: "", category: "", description: fallback });
+    }
     return NextResponse.json({ error: "Kunne ikke gjenkjenne verktøyet" }, { status: 422 });
   }
 }
