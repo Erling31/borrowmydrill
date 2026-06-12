@@ -26,6 +26,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Filen er for stor (maks 5 MB)" }, { status: 400 });
   }
 
-  const blob = await put(file.name, file, { access: "public" });
+  // Every upload is named "tool.jpg" by the client — a random suffix is
+  // required so uploads don't collide (Blob refuses to overwrite by default).
+  const blob = await put(file.name, file, { access: "public", addRandomSuffix: true });
   return NextResponse.json({ url: blob.url });
 }

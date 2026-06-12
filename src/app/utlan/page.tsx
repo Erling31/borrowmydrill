@@ -35,9 +35,9 @@ export default async function UtlanPage({
 
   const userId = session.user.id;
   const { fane } = await searchParams;
-  const activeTab = fane === "innlant" ? "innlant" : fane === "historikk" ? "historikk" : "aktive";
+  const activeTab = fane && ["innlant", "mottatte", "sendte", "historikk"].includes(fane) ? fane : "aktive";
 
-  const [activeOut, activeIn, history] = await Promise.all([
+  const [activeOut, activeIn, incoming, outgoing, history] = await Promise.all([
     // Tools I own that are currently approved/out
     db.borrowRequest.findMany({
       where: { tool: { ownerId: userId }, status: "approved" },
@@ -47,8 +47,20 @@ export default async function UtlanPage({
     // Tools I'm currently borrowing
     db.borrowRequest.findMany({
       where: { userId, status: "approved" },
-      include: { tool: { select: { id: true, name: true, imageUrl: true }, include: { owner: { select: { name: true } } } } },
+      include: { tool: { select: { id: true, name: true, imageUrl: true, owner: { select: { name: true } } } } },
       orderBy: { endDate: "asc" },
+    }),
+    // Pending requests from neighbors on my tools
+    db.borrowRequest.findMany({
+      where: { tool: { ownerId: userId }, status: "pending" },
+      include: { user: { select: { name: true, neighborhood: true } }, tool: { select: { id: true, name: true, imageUrl: true } } },
+      orderBy: { createdAt: "desc" },
+    }),
+    // Pending requests I've sent to neighbors
+    db.borrowRequest.findMany({
+      where: { userId, status: "pending" },
+      include: { tool: { select: { id: true, name: true, imageUrl: true, owner: { select: { name: true } } } } },
+      orderBy: { createdAt: "desc" },
     }),
     // Returned or rejected
     db.borrowRequest.findMany({
@@ -70,6 +82,8 @@ export default async function UtlanPage({
   const tabs = [
     { id: "aktive", label: `Aktive · ${activeOut.length}`, href: "/utlan" },
     { id: "innlant", label: `Lånt inn · ${activeIn.length}`, href: "/utlan?fane=innlant" },
+    { id: "mottatte", label: `Mottatte · ${incoming.length}`, href: "/utlan?fane=mottatte" },
+    { id: "sendte", label: `Sendte · ${outgoing.length}`, href: "/utlan?fane=sendte" },
     { id: "historikk", label: "Historikk", href: "/utlan?fane=historikk" },
   ];
 
@@ -154,6 +168,57 @@ export default async function UtlanPage({
                 </div>
               );
             })
+          )}
+        </div>
+      )}
+
+      {activeTab === "mottatte" && (
+        <div className="flex flex-col gap-4">
+          {incoming.length === 0 ? (
+            <EmptyState text="Ingen forespørsler fra naboer venter på svar." />
+          ) : (
+            incoming.map((req) => (
+              <div key={req.id} className="bg-white rounded-2xl shadow-sm p-4">
+                <div className="flex gap-3 items-center mb-3">
+                  <ToolThumb imageUrl={req.tool.imageUrl} name={req.tool.name} />
+                  <div className="flex-1 min-w-0">
+                    <Link href={`/tools/${req.tool.id}`} className="font-bold text-[#1e1f21] text-sm hover:text-coral-500">
+                      {req.tool.name}
+                    </Link>
+                    <p className="text-xs text-zinc-500 mt-0.5">
+                      {req.user.name} vil låne {formatDate(req.startDate)} – {formatDate(req.endDate)}
+                    </p>
+                    {req.message && <p className="text-xs text-zinc-400 mt-1 italic">&ldquo;{req.message}&rdquo;</p>}
+                  </div>
+                </div>
+                <RequestActions requestId={req.id} />
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {activeTab === "sendte" && (
+        <div className="flex flex-col gap-4">
+          {outgoing.length === 0 ? (
+            <EmptyState text="Du har ingen utsendte forespørsler som venter på svar." />
+          ) : (
+            outgoing.map((req) => (
+              <div key={req.id} className="bg-white rounded-2xl shadow-sm p-4 flex gap-3 items-center">
+                <ToolThumb imageUrl={req.tool.imageUrl} name={req.tool.name} />
+                <div className="flex-1 min-w-0">
+                  <Link href={`/tools/${req.tool.id}`} className="font-bold text-[#1e1f21] text-sm hover:text-coral-500">
+                    {req.tool.name}
+                  </Link>
+                  <p className="text-xs text-zinc-500 mt-0.5">
+                    til {req.tool.owner.name} · {formatDate(req.startDate)} – {formatDate(req.endDate)}
+                  </p>
+                </div>
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 shrink-0">
+                  venter på svar
+                </span>
+              </div>
+            ))
           )}
         </div>
       )}

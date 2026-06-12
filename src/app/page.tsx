@@ -25,6 +25,13 @@ const card: React.CSSProperties = {
   boxShadow: "0 1px 2px rgba(20,22,18,0.04)",
 };
 
+function dueChip(end: Date): { tone: "ok" | "warn" | "danger"; text: string } {
+  const diff = Math.round((end.getTime() - Date.now()) / 86_400_000);
+  if (diff < 0) return { tone: "danger", text: `${Math.abs(diff)} d over` };
+  if (diff <= 1) return { tone: "warn", text: diff === 0 ? "i dag" : "i morgen" };
+  return { tone: "ok", text: `${diff} d igjen` };
+}
+
 function StatusChip({ tone, children }: { tone: "ok" | "warn" | "danger" | "neutral"; children: React.ReactNode }) {
   const styles = {
     ok:      { color: "#2f6e44", background: "#e2f0e5", border: "1px solid #cbe4d1" },
@@ -47,13 +54,20 @@ export default async function Home() {
   const firstName = session.user.name?.split(" ")[0] ?? "deg";
   const today = new Date().toLocaleDateString("nb", { weekday: "long", day: "numeric", month: "long" });
 
-  const [myTools, activeLoans, pendingRequests] = await Promise.all([
+  const [myTools, activeLoans, pendingRequests, sentRequests, borrowedTools] = await Promise.all([
     db.tool.count({ where: { ownerId: userId } }),
     db.tool.count({ where: { ownerId: userId, available: false } }),
     db.borrowRequest.findMany({
       where: { tool: { ownerId: userId }, status: "pending" },
       include: { user: { select: { name: true, neighborhood: true } }, tool: { select: { name: true, id: true } } },
       orderBy: { createdAt: "desc" },
+    }),
+    db.borrowRequest.count({ where: { userId, status: "pending" } }),
+    // Tools I'm currently borrowing from neighbors
+    db.borrowRequest.findMany({
+      where: { userId, status: "approved" },
+      include: { tool: { select: { id: true, name: true, imageUrl: true, owner: { select: { name: true } } } } },
+      orderBy: { endDate: "asc" },
     }),
   ]);
 
@@ -99,24 +113,32 @@ export default async function Home() {
       </div>
 
       <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 16 }}>
-        {/* 3-column stat grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
+        {/* 4-column stat grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>
           <Link href="/mine-verktoy" style={{ textDecoration: "none" }}>
-            <div style={{ ...card, padding: 12, textAlign: "center" }}>
-              <div style={{ fontWeight: 700, fontSize: 26, lineHeight: 1, color: T.text }}>{myTools}</div>
+            <div style={{ ...card, padding: "12px 8px", textAlign: "center" }}>
+              <div style={{ fontWeight: 700, fontSize: 24, lineHeight: 1, color: T.text }}>{myTools}</div>
               <div style={{ fontSize: 11, color: T.muted, marginTop: 4, fontWeight: 500 }}>verktøy</div>
             </div>
           </Link>
           <Link href="/utlan" style={{ textDecoration: "none" }}>
-            <div style={{ ...card, padding: 12, textAlign: "center", background: T.accentSoft, border: `1px solid transparent` }}>
-              <div style={{ fontWeight: 700, fontSize: 26, lineHeight: 1, color: T.accentInk }}>{activeLoans}</div>
+            <div style={{ ...card, padding: "12px 8px", textAlign: "center", background: T.accentSoft, border: `1px solid transparent` }}>
+              <div style={{ fontWeight: 700, fontSize: 24, lineHeight: 1, color: T.accentInk }}>{activeLoans}</div>
               <div style={{ fontSize: 11, color: T.accentInk, marginTop: 4, fontWeight: 500 }}>utlånt</div>
             </div>
           </Link>
-          <div style={{ ...card, padding: 12, textAlign: "center" }}>
-            <div style={{ fontWeight: 700, fontSize: 26, lineHeight: 1, color: T.text }}>{pendingRequests.length}</div>
-            <div style={{ fontSize: 11, color: T.muted, marginTop: 4, fontWeight: 500 }}>forespørsel</div>
-          </div>
+          <Link href="/utlan?fane=mottatte" style={{ textDecoration: "none" }}>
+            <div style={{ ...card, padding: "12px 8px", textAlign: "center" }}>
+              <div style={{ fontWeight: 700, fontSize: 24, lineHeight: 1, color: T.text }}>{pendingRequests.length}</div>
+              <div style={{ fontSize: 11, color: T.muted, marginTop: 4, fontWeight: 500 }}>fra naboer</div>
+            </div>
+          </Link>
+          <Link href="/utlan?fane=sendte" style={{ textDecoration: "none" }}>
+            <div style={{ ...card, padding: "12px 8px", textAlign: "center" }}>
+              <div style={{ fontWeight: 700, fontSize: 24, lineHeight: 1, color: T.text }}>{sentRequests}</div>
+              <div style={{ fontSize: 11, color: T.muted, marginTop: 4, fontWeight: 500 }}>sendt</div>
+            </div>
+          </Link>
         </div>
 
         {/* Quick action */}
@@ -130,7 +152,7 @@ export default async function Home() {
         {/* Pending requests — "Venter på deg" */}
         {pendingRequests.length > 0 && (
           <div>
-            <SectionLabel>Venter på deg</SectionLabel>
+            <SectionLabel>Forespørsler fra naboer</SectionLabel>
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
               {pendingRequests.map((req) => {
                 const initials = req.user.name?.split(" ").map(w => w[0]).slice(0, 2).join("") ?? "?";
@@ -171,12 +193,43 @@ export default async function Home() {
                 return (
                   <Link key={tool.id} href={`/tools/${tool.id}`} style={{ textDecoration: "none" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 10px", borderBottom: i === loanedTools.length - 1 ? "none" : `1px solid ${T.hair2}` }}>
-                      <ToolImg size={42} />
+                      <ToolImg size={42} imageUrl={tool.imageUrl} name={tool.name} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontWeight: 600, fontSize: 14, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tool.name}</div>
                         <div style={{ fontSize: 11.5, color: T.muted }}>hos {borrower}</div>
                       </div>
                       <StatusChip tone="warn">utlånt</StatusChip>
+                    </div>
+                  </Link>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* Currently borrowed from neighbors */}
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+            <SectionLabel>Lånt fra naboer</SectionLabel>
+            <Link href="/utlan?fane=innlant" style={{ fontSize: 12.5, fontWeight: 600, color: T.accent, textDecoration: "none" }}>Se alle</Link>
+          </div>
+          <div style={{ ...card, marginTop: 8, padding: 4, overflow: "hidden" }}>
+            {borrowedTools.length === 0 ? (
+              <div style={{ padding: 16, fontSize: 13, color: T.muted, textAlign: "center" }}>
+                Du låner ingenting akkurat nå
+              </div>
+            ) : (
+              borrowedTools.map((req, i) => {
+                const due = dueChip(req.endDate);
+                return (
+                  <Link key={req.id} href={`/tools/${req.tool.id}`} style={{ textDecoration: "none" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 10px", borderBottom: i === borrowedTools.length - 1 ? "none" : `1px solid ${T.hair2}` }}>
+                      <ToolImg size={42} imageUrl={req.tool.imageUrl} name={req.tool.name} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 600, fontSize: 14, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{req.tool.name}</div>
+                        <div style={{ fontSize: 11.5, color: T.muted }}>fra {req.tool.owner.name}</div>
+                      </div>
+                      <StatusChip tone={due.tone}>{due.text}</StatusChip>
                     </div>
                   </Link>
                 );
@@ -211,10 +264,15 @@ function Avatar({ initials, size = 40 }: { initials: string; size?: number }) {
   );
 }
 
-function ToolImg({ size = 50 }: { size?: number }) {
+function ToolImg({ size = 50, imageUrl, name }: { size?: number; imageUrl?: string | null; name?: string }) {
   return (
-    <div style={{ width: size, height: size, borderRadius: 12, background: "linear-gradient(135deg,#eceee9,#e2e5de)", border: "1px solid #e8e9e4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: size * 0.45 }}>
-      🔧
+    <div style={{ width: size, height: size, borderRadius: 12, background: "linear-gradient(135deg,#eceee9,#e2e5de)", border: "1px solid #e8e9e4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: size * 0.45, overflow: "hidden" }}>
+      {imageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={imageUrl} alt={name ?? ""} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+      ) : (
+        "🔧"
+      )}
     </div>
   );
 }
@@ -269,8 +327,8 @@ function LandingPage() {
 
       <section className="bg-coral-500 px-4 py-14 text-center">
         <div className="max-w-xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-3" style={{ color: "#143524" }}>Klar til å dele?</h2>
-          <p className="mb-7" style={{ color: "#2f6340" }}>Registrer deg gratis og legg ut ditt første verktøy på under ett minutt.</p>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-3 text-white">Klar til å dele?</h2>
+          <p className="mb-7 text-coral-50">Registrer deg gratis og legg ut ditt første verktøy på under ett minutt.</p>
           <Link href="/auth/signup" className="inline-block bg-white font-bold px-8 py-3.5 rounded-xl hover:bg-coral-50 transition-colors" style={{ color: "#3f7d52" }}>
             Kom i gang
           </Link>
