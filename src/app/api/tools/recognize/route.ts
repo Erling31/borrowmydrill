@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
+import Anthropic from "@anthropic-ai/sdk";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
-const genai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY ?? "" });
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY ?? "" });
+
+type SupportedMediaType = "image/jpeg" | "image/png" | "image/gif" | "image/webp";
 
 const TONE_INSTRUCTIONS: Record<string, string> = {
   kort: "Skriv beskrivelsen kort og presist — maks én kort setning, uten fyllord.",
@@ -44,23 +46,28 @@ Svar KUN med et JSON-objekt med disse feltene (ingen annen tekst, ingen kodeblok
 
 Hvis du er usikker på merke/modell, skriv hva slags verktøy det er (f.eks. "Sirkelsag" eller "Høytrykkspyler").`;
 
-    const result = await genai.models.generateContent({
-      model: "gemini-2.0-flash",
-      contents: [
+    const message = await anthropic.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1024,
+      messages: [
         {
           role: "user",
-          parts: [
-            { inlineData: { mimeType: mediaType, data: imageBase64 } },
-            { text: prompt },
+          content: [
+            {
+              type: "image",
+              source: { type: "base64", media_type: mediaType as SupportedMediaType, data: imageBase64 },
+            },
+            { type: "text", text: prompt },
           ],
         },
       ],
     });
 
-    raw = result.text ?? "";
+    const textBlock = message.content.find((block) => block.type === "text");
+    raw = textBlock?.type === "text" ? textBlock.text : "";
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error("recognize: Gemini API error:", msg);
+    console.error("recognize: Claude API error:", msg);
     return NextResponse.json({ error: "AI-tjenesten er utilgjengelig", detail: msg }, { status: 502 });
   }
 
