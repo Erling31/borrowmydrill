@@ -47,7 +47,7 @@ Svar KUN med et JSON-objekt med disse feltene (ingen annen tekst, ingen kodeblok
 Hvis du er usikker på merke/modell, skriv hva slags verktøy det er (f.eks. "Sirkelsag" eller "Høytrykkspyler").`;
 
     const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-6",
+      model: "claude-haiku-4-5",
       max_tokens: 1024,
       messages: [
         {
