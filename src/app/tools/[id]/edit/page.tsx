@@ -15,7 +15,7 @@ export default function EditToolPage() {
 
   const [loading, setLoading] = useState(true);
   const [notOwner, setNotOwner] = useState(false);
-  const [form, setForm] = useState({ name: "", description: "", imageUrl: "", category: "", value: "", condition: "God" });
+  const [form, setForm] = useState({ name: "", description: "", imageUrl: "", category: "", condition: "God" });
   const [available, setAvailable] = useState(true);
   const [visible, setVisible] = useState(true);
   const [error, setError] = useState("");
@@ -49,7 +49,6 @@ export default function EditToolPage() {
           description: tool.description,
           imageUrl: tool.imageUrl ?? "",
           category: tool.category ?? "",
-          value: tool.value != null ? String(tool.value) : "",
           condition: tool.condition ?? "God",
         });
         setAvailable(tool.available);
@@ -140,12 +139,7 @@ export default function EditToolPage() {
     const res = await fetch(`/api/tools/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...form,
-        value: form.value ? parseInt(form.value.replace(/\D/g, ""), 10) || null : null,
-        available,
-        visible,
-      }),
+      body: JSON.stringify({ ...form, available, visible }),
     });
 
     if (!res.ok) {
@@ -327,31 +321,18 @@ export default function EditToolPage() {
             />
           </label>
 
-          <div className="grid grid-cols-2 gap-4">
-            <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-              Verdi (kr)
-              <input
-                type="text"
-                inputMode="numeric"
-                value={form.value}
-                onChange={(e) => setForm({ ...form, value: e.target.value })}
-                className="border border-warm-200 rounded-xl px-3 py-3 text-base bg-warm-50 focus:outline-none focus:ring-2 focus:ring-coral-400 focus:bg-white transition-colors"
-                placeholder="f.eks. 1500"
-              />
-            </label>
-            <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-              Stand
-              <select
-                value={form.condition}
-                onChange={(e) => setForm({ ...form, condition: e.target.value })}
-                className="border border-warm-200 rounded-xl px-3 py-3 text-base bg-warm-50 focus:outline-none focus:ring-2 focus:ring-coral-400 focus:bg-white transition-colors"
-              >
-                {["Som ny", "God", "Brukt", "Slitt"].map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </label>
-          </div>
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+            Stand
+            <select
+              value={form.condition}
+              onChange={(e) => setForm({ ...form, condition: e.target.value })}
+              className="border border-warm-200 rounded-xl px-3 py-3 text-base bg-warm-50 focus:outline-none focus:ring-2 focus:ring-coral-400 focus:bg-white transition-colors"
+            >
+              {["Som ny", "God", "Brukt", "Slitt"].map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </label>
 
           {/* Availability toggle */}
           <label className="flex items-center justify-between py-3 border-t border-warm-100">

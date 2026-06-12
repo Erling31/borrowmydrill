@@ -62,18 +62,11 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
           <h1 className="text-2xl font-bold text-[#1e1f21]">{tool.name}</h1>
           <p className="text-zinc-500 mt-1 text-sm">{tool.owner.name} · {tool.owner.neighborhood}</p>
 
-          {(tool.value || tool.condition) && (
+          {tool.condition && (
             <div className="flex flex-wrap gap-2 mt-3">
-              {tool.value != null && (
-                <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-warm-100 text-zinc-600">
-                  Verdi ca. {tool.value.toLocaleString("nb")} kr
-                </span>
-              )}
-              {tool.condition && (
-                <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-warm-100 text-zinc-600">
-                  Stand: {tool.condition}
-                </span>
-              )}
+              <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-warm-100 text-zinc-600">
+                Stand: {tool.condition}
+              </span>
             </div>
           )}
 

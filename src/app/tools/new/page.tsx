@@ -11,7 +11,7 @@ type RecognizeStatus = "idle" | "recognizing" | "filled" | "failed";
 export default function NewToolPage() {
   const router = useRouter();
   const { status } = useSession();
-  const [form, setForm] = useState({ name: "", description: "", imageUrl: "", category: "", value: "", condition: "God", visible: true });
+  const [form, setForm] = useState({ name: "", description: "", imageUrl: "", category: "", condition: "God", visible: true });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -128,10 +128,7 @@ export default function NewToolPage() {
     const res = await fetch("/api/tools", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...form,
-        value: form.value ? parseInt(form.value.replace(/\D/g, ""), 10) || null : null,
-      }),
+      body: JSON.stringify(form),
     });
 
     if (!res.ok) {
@@ -312,32 +309,18 @@ export default function NewToolPage() {
             />
           </label>
 
-          <div className="grid grid-cols-2 gap-4">
-            <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-              Verdi (kr)
-              <input
-                type="text"
-                inputMode="numeric"
-                value={form.value}
-                onChange={(e) => setForm({ ...form, value: e.target.value })}
-                className="border border-warm-200 rounded-xl px-3 py-3 text-base bg-warm-50 focus:outline-none focus:ring-2 focus:ring-coral-400 focus:bg-white transition-colors"
-                placeholder="f.eks. 1500"
-              />
-            </label>
-
-            <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-              Stand
-              <select
-                value={form.condition}
-                onChange={(e) => setForm({ ...form, condition: e.target.value })}
-                className="border border-warm-200 rounded-xl px-3 py-3 text-base bg-warm-50 focus:outline-none focus:ring-2 focus:ring-coral-400 focus:bg-white transition-colors"
-              >
-                {["Som ny", "God", "Brukt", "Slitt"].map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </label>
-          </div>
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
+            Stand
+            <select
+              value={form.condition}
+              onChange={(e) => setForm({ ...form, condition: e.target.value })}
+              className="border border-warm-200 rounded-xl px-3 py-3 text-base bg-warm-50 focus:outline-none focus:ring-2 focus:ring-coral-400 focus:bg-white transition-colors"
+            >
+              {["Som ny", "God", "Brukt", "Slitt"].map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </label>
 
           <label className="flex items-center justify-between gap-3 bg-warm-50 border border-warm-200 rounded-xl px-4 py-3.5">
             <span className="flex flex-col">
