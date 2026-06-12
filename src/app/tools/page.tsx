@@ -2,7 +2,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 
-export const metadata = { title: "Naboers verktøy – Naboverktøy" };
+export const metadata = { title: "Send forespørsel – Naboverktøy" };
 
 const CATEGORIES = ["Alle", "El-verktøy", "Håndverktøy", "Hage", "Stiger", "Annet"];
 
@@ -52,7 +52,7 @@ export default async function ToolsPage({
       {/* Header */}
       <div style={{ background: T.surface, padding: "16px 16px 12px", borderBottom: `1px solid ${T.hair}`, display: "flex", alignItems: "center", gap: 12 }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.02em", color: T.text }}>Naboer</div>
+          <div style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.02em", color: T.text }}>Send forespørsel</div>
           <div style={{ fontSize: 12, color: T.muted, marginTop: 2 }}>{neighborTools.length} verktøy i nabolaget</div>
         </div>
         <div style={{ width: 38, height: 38, borderRadius: 11, background: T.bg, color: T.text, display: "flex", alignItems: "center", justifyContent: "center" }}>

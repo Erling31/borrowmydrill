@@ -15,7 +15,7 @@ const TABS = [
   },
   {
     href: "/mine-verktoy",
-    label: "Verktøy",
+    label: "Mine verktøy",
     icon: (active: boolean) => (
       <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round">
         <rect x="4" y="4" width="7" height="7" rx="1" />
@@ -26,13 +26,13 @@ const TABS = [
     ),
   },
   {
-    href: "/tools/new",
-    label: "Legg til",
+    href: "/tools",
+    label: "Send forespørsel",
     fab: true,
     icon: (_active: boolean) => (
-      <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
-        <line x1="12" y1="5" x2="12" y2="19" />
-        <line x1="5" y1="12" x2="19" y2="12" />
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 2 11 13" />
+        <path d="m22 2-7 20-4-9-9-4 20-7z" />
       </svg>
     ),
   },
@@ -46,7 +46,7 @@ const TABS = [
     ),
   },
   {
-    href: "/tools",
+    href: "/naboer",
     label: "Naboer",
     icon: (active: boolean) => (
       <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round">
@@ -61,10 +61,10 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 bg-white border-t border-warm-200 z-50 sm:hidden"
+      className="fixed bottom-0 left-0 right-0 bg-white border-t border-warm-200 z-50"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <div className="grid grid-cols-5 items-center px-3 pt-2 pb-1">
+      <div className="grid grid-cols-5 items-center px-3 pt-2 pb-1 max-w-lg mx-auto">
         {TABS.map((tab) => {
           const active = pathname === tab.href || (tab.href !== "/" && pathname.startsWith(tab.href));
 
@@ -81,7 +81,7 @@ export default function BottomNav() {
                   >
                     {tab.icon(false)}
                   </div>
-                  <span className="text-[10px] font-semibold text-coral-500 -mt-1">{tab.label}</span>
+                  <span className="text-[10px] font-semibold text-coral-500 -mt-1 whitespace-nowrap">{tab.label}</span>
                 </Link>
               </div>
             );

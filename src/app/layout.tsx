@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Source_Sans_3 } from "next/font/google";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-import SignOutButton from "@/components/SignOutButton";
 import SessionProvider from "@/components/SessionProvider";
 import MobileNav from "@/components/MobileNav";
 import BottomNav from "@/components/BottomNav";
@@ -36,44 +35,23 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               Naboverktøy
             </Link>
 
-            {/* Desktop nav */}
-            <div className="hidden sm:flex items-center gap-5 text-sm font-medium text-zinc-600">
-              <Link href="/tools" className="hover:text-[#1e1f21] transition-colors">Se verktøy</Link>
-              {session?.user ? (
-                <>
-                  <span className="text-zinc-400">Hei, {session.user.name?.split(" ")[0]}</span>
-                  <Link href="/tools/new" className="bg-coral-500 text-white px-4 py-2 rounded-full hover:bg-coral-600 transition-colors">
-                    Legg ut verktøy
-                  </Link>
-                  <SignOutButton />
-                </>
-              ) : (
-                <>
-                  <Link href="/auth/signin" className="hover:text-[#1e1f21] transition-colors">Logg inn</Link>
-                  <Link href="/auth/signup" className="bg-coral-500 text-white px-4 py-2 rounded-full hover:bg-coral-600 transition-colors">
-                    Registrer deg
-                  </Link>
-                </>
-              )}
-            </div>
-
-            {/* Mobile hamburger */}
-            <div className="relative sm:hidden">
+            {/* Hamburger menu — same on mobile and desktop */}
+            <div className="relative">
               <MobileNav user={session?.user} />
             </div>
           </nav>
         </header>
 
         <SessionProvider>
-          <main className="flex-1 pb-[4.5rem] sm:pb-0">{children}</main>
+          <main className={`flex-1 ${session?.user ? "pb-[4.5rem]" : ""}`}>{children}</main>
           {session?.user && <BottomNav />}
         </SessionProvider>
 
-        <footer
-          className="hidden sm:block bg-white border-t border-warm-200 py-6 text-center text-sm text-zinc-400"
-        >
-          Naboverktøy — del verktøy med naboene
-        </footer>
+        {!session?.user && (
+          <footer className="bg-white border-t border-warm-200 py-6 text-center text-sm text-zinc-400">
+            Naboverktøy — del verktøy med naboene
+          </footer>
+        )}
       </body>
     </html>
   );

@@ -30,7 +30,7 @@ export default function MobileNav({ user }: Props) {
       </button>
 
       {open && (
-        <div className="absolute top-14 left-0 right-0 bg-white border-b border-zinc-200 shadow-lg z-50">
+        <div className="fixed top-14 left-0 right-0 bg-white border-b border-zinc-200 shadow-lg z-50">
           <div className="flex flex-col px-4 py-3 gap-1">
             <Link
               href="/tools"
