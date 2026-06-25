@@ -5,7 +5,7 @@ import Link from "next/link";
 import { signOut } from "next-auth/react";
 
 interface Props {
-  user?: { name?: string | null } | null;
+  user?: { name?: string | null; isAdmin?: boolean } | null;
 }
 
 export default function MobileNav({ user }: Props) {
@@ -48,6 +48,15 @@ export default function MobileNav({ user }: Props) {
                 >
                   Legg ut verktøy
                 </Link>
+                {user.isAdmin && (
+                  <Link
+                    href="/admin"
+                    onClick={() => setOpen(false)}
+                    className="py-3 text-base font-medium text-zinc-700 border-b border-zinc-100"
+                  >
+                    Admin
+                  </Link>
+                )}
                 <button
                   onClick={() => { setOpen(false); signOut({ callbackUrl: "/" }); }}
                   className="py-3 text-base font-medium text-zinc-500 text-left"
