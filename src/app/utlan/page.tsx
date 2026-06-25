@@ -154,17 +154,20 @@ export default async function UtlanPage({
             activeIn.map((req) => {
               const due = dueLabel(req.endDate);
               return (
-                <div key={req.id} className="bg-white rounded-2xl shadow-sm p-4 flex gap-3 items-center">
-                  <ToolThumb imageUrl={req.tool.imageUrl} name={req.tool.name} />
-                  <div className="flex-1 min-w-0">
-                    <Link href={`/tools/${req.tool.id}`} className="font-bold text-[#1e1f21] text-sm hover:text-coral-500">
-                      {req.tool.name}
-                    </Link>
-                    <p className="text-xs text-zinc-500 mt-0.5">
-                      fra {req.tool.owner.name}
-                    </p>
+                <div key={req.id} className="bg-white rounded-2xl shadow-sm p-4">
+                  <div className="flex gap-3 items-center mb-3">
+                    <ToolThumb imageUrl={req.tool.imageUrl} name={req.tool.name} />
+                    <div className="flex-1 min-w-0">
+                      <Link href={`/tools/${req.tool.id}`} className="font-bold text-[#1e1f21] text-sm hover:text-coral-500">
+                        {req.tool.name}
+                      </Link>
+                      <p className="text-xs text-zinc-500 mt-0.5">
+                        fra {req.tool.owner.name}
+                      </p>
+                    </div>
+                    <span className={`text-xs font-bold shrink-0 ${due.color}`}>{due.text}</span>
                   </div>
-                  <span className={`text-xs font-bold shrink-0 ${due.color}`}>{due.text}</span>
+                  <RequestActions requestId={req.id} showReturn />
                 </div>
               );
             })
